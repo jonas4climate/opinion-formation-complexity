@@ -1,0 +1,7 @@
+numpy
+scipy
+ipykernel
+networkx
+matplotlib
+seaborn
+cellpylib

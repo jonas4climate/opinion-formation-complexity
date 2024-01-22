@@ -1,28 +1,9 @@
 # Complex System Simulation Research Project
 
-## Project ideas
+## Project Description
 
-**Agriculture in Climate Change**
-- e.g. disease spread in monoculture vs. polyculture
-- Cellular Automato
-- Tipping points
+## Initialization
 
-**Transportation Networks**
-- Cellular Automata
-- Tipping points
-- Phase transitions linked to traffic jams
-- Data from NS?
-- Pedestrian crowd mobility and emergence
+Recommended: To set up using **conda** enter `conda env create --yes -f environment.yml` and activate using `conda activate css-project`
 
-**Ethical Development (Social / Psychological / Political Science focus)**
-- Societal change through activism
-- Critical threshold for political change
-
-**Stack:**
-- GitHub (Code + ToDos)
-- Python
-- Presentation TBD
-
-**Project timeframe:**
-- Choose topic on Monday
-- Finish experimentation phase by 28 Jan
+_Alternative_: Using **pip** only, set up by creating a virtual environment and running `pip install -r requirements.txt`
