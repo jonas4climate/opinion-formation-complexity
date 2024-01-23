@@ -79,12 +79,6 @@ def d(x0,y0,x1,y1):
     """
     Returns the distance between two nodes of the grid given by their x and y indexes
 
-    Inputs
-    x0: ...
-    x1: ...
-    y0: ...
-    y1: ...
-    
     Example:
     If we have a 3x3 matrix and want to compute the distance between the top left node
     and a node in the center, we would call d(0,0,1,1)=1.414...
@@ -100,16 +94,52 @@ def g(x):
     """
     Increasing function of social distance.
     Used to scale the social impact between nodes
-    so 
+    
+    TODO: Use network theory to use an even better function for distance scaling
     """
     return x**2
 
-def I(s,sigma,betta,h):
+def I(ix,iy):
     """
-    Social impact exerted on a particular node
-    It is a function 
+    Social impact exerted on a particular node i (with coordinates ix and iy) by the other nodes
+
+    Is is a function of the influence of our node (si), its s
+    
     """
-    return -s*betta - sigma*h - np.sum(1/g(d(1,2,1,1)))
+    
+    # Retrieve the opinion and influence of our node
+    s_i = INFLUENCE_GRID[ix,iy]
+    sigma_i =  STARTING_GRID[ix,iy]
+
+    # Compute the influence of the other nodes
+    ## Notice that when there is no node in a coordinate, STARTING_GRID is 0
+    influence_sum = 0
+
+
+    for jy, jx in np.ndindex(STARTING_GRID.shape):    
+        ## If we are not in the position of our node
+        if not (ix == jx and iy == jy):
+            ## And if we have a cell here (sigma_j != 0 or s_j != 0)
+            sigma_j =  STARTING_GRID[jx,jy]
+            s_j = INFLUENCE_GRID[jx,jy]
+                        
+            if s_j != 0:
+                ### We need to add another term to the sum
+                ### Recall that if there is no cell here, we just add a 0
+                ### So we should be ok, plus it should be efficient enough
+                influence_sum += (s_j * sigma_i * sigma_j )/d(ix,iy,jx,jy)
+
+
+    return -s_i*BETTA - sigma_i*EXTERNAL_INFLUENCE - influence_sum #
+
+
+def get_social_impact_grid():
+    """
+    Returns a grid with
+    """
+
+    return SOCIAL_IMPACT_GRID
+
 
 def rule(i):
     """
@@ -125,12 +155,16 @@ def rule(i):
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 7,7
+GRIDSIZE_X,GRIDSIZE_Y = 3,3
 p = 0.3  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 5
+TIMESTEPS = 10
 NEIGHBOURHOOD = 'Moore'
 #TODO: APPLY_RULE = CustomRule()
 #TODO: APPLY_RULE = lambda n, c,t: cpl.totalistic_rule(n, k=2, rule=126) # This is the core of what we need to modify to match the paper
+
+# Model parameters
+BETTA = 1
+EXTERNAL_INFLUENCE = 1/2
 
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
@@ -138,21 +172,28 @@ assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 
 
 # Innitialize starting grid
-# It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
+## It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
 STARTING_GRID = innitialize_grid(p)
 
 
-## Create and initialize the influence of nodes of our STARTING_GRID
-# It is a 2D array of same size, with nodes having positive values from a distribution q
-# And the central node has a very high value
+# Create and initialize the influence of nodes of our STARTING_GRID
+## It is a 2D array of same size, with nodes having positive values from a distribution q
+## And the central node has a very high value
 INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID)
 
 
-print('Starting grid:\n',STARTING_GRID)
+#print('Starting grid:\n',STARTING_GRID)
 print('Influence grid:\n',INFLUENCE_GRID)
 
 
- 
+# Test the influence of every node
+
+index = 0
+for x, y in np.ndindex(STARTING_GRID.shape):
+    social_impact = I(x,y)
+    print('social_impact of other nodes on node at',x,y,'is:',social_impact)
+    index += 1
+
 
 
 # Distance function
