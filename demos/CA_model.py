@@ -1,6 +1,10 @@
 """
 CA model from paper 'Phase transitions in social impact models of
 opinion formation'
+
+TODO: Because the cells do not move and just change their mind, we should be able to optimize the code
+computing distances only once, and removing most matrices to speed up things
+
 """
 import cellpylib as cpl
 from collections import defaultdict
@@ -60,7 +64,7 @@ def innitialize_influence_grid(STARTING_GRID):
     INFLUENCE_GRID = np.zeros((GRIDSIZE_X,GRIDSIZE_Y)) #STARTING_GRID
 
     # Fill it with values
-    for iy, ix in np.ndindex(STARTING_GRID.shape):
+    for ix, iy in np.ndindex(STARTING_GRID.shape):
         # If the corresponding position of STARTING_GRID had -1
         if STARTING_GRID[iy, ix] == -1:
             # Give that influence grid coordinate an influence value
@@ -116,7 +120,7 @@ def I(ix,iy):
     influence_sum = 0
 
 
-    for jy, jx in np.ndindex(STARTING_GRID.shape):    
+    for jx, jy in np.ndindex(STARTING_GRID.shape):    
         ## If we are not in the position of our node
         if not (ix == jx and iy == jy):
             ## And if we have a cell here (sigma_j != 0 or s_j != 0)
@@ -133,19 +137,72 @@ def I(ix,iy):
     return -s_i*BETTA - sigma_i*EXTERNAL_INFLUENCE - influence_sum #
 
 
-def get_social_impact_grid():
+def get_social_impact_grid(INFLUENCE_GRID):
     """
-    Returns a grid with
+    Returns a grid with the corresponding social impact that every node has from the others
     """
+
+    # Start with an empty matrix
+    SOCIAL_IMPACT_GRID = np.zeros(INFLUENCE_GRID.shape)
+
+    # Loop over values that have nodes and update them
+    # with their corresponding social impact
+    for ix, iy in np.ndindex(INFLUENCE_GRID.shape):
+        if INFLUENCE_GRID[ix,iy] != 0:
+            
+            impact = I(ix,iy)
+
+            SOCIAL_IMPACT_GRID[ix,iy] = impact
 
     return SOCIAL_IMPACT_GRID
 
 
-def rule(i):
+def rule(old_opinion,I_i,T):
     """
-    Updates the opinion of node i based on its neighboors
+    Updates the opinion of node at ix iy based on its neighboors
     """
-    return 0
+
+    p_keeping_opinion = (np.exp(-I_i/T))/(np.exp(-I_i/T)+np.exp(I_i/T))
+
+    # TODO: Add an asert here to ensure 0<p<1
+    #print('p_keeping opinion:',p_keeping_opinion)
+
+
+    # If a random number between 0 and 1 is under the threshold
+    # we stay with the old opinion. Otherwise, we change
+    if p_keeping_opinion < np.random.rand(1):
+        new_opinion = old_opinion
+    else:
+        new_opinion = -old_opinion
+
+    return new_opinion
+
+def get_next_step_grid():
+    """
+    Returns the array of the next time step by applying the opinion changing rule to all cells
+
+    TODO: Turn this into the rule format of Cellpylib (see https://cellpylib.org/additional.html#custom-rules)
+    or, alternatively, develop our own functions for simulation and plotting
+    """
+
+    # Start with an empty matrix
+    NEW_GRID = np.zeros(STARTING_GRID.shape)
+    
+    # Loop over values that have nodes and update their opinion
+    # with their corresponding result from applying the rule
+    for ix, iy in np.ndindex(INFLUENCE_GRID.shape):
+        if INFLUENCE_GRID[ix,iy] != 0:
+            # Get the old opinion and social influence at the node
+            old_opinion = STARTING_GRID[ix,iy] 
+            I_i = SOCIAL_IMPACT_GRID[ix,iy] # Or just do I_i I(ix,iy), for SOCIAL_IMPACT_GRID could actually be redundant
+
+            # Apply the rule to get the new opinion
+            new_opinion = rule(old_opinion,I_i,TEMPERATURE)
+
+            # And update it in the matrix
+            NEW_GRID[ix,iy] = new_opinion
+
+    return NEW_GRID
 
 
 
@@ -156,9 +213,10 @@ def rule(i):
 
 # Set global parameters
 GRIDSIZE_X,GRIDSIZE_Y = 3,3
-p = 0.3  # This value represents likelihood of adding an individual to an space in the grid during innitialization
+p = 0.4  # This value represents likelihood of adding an individual to an space in the grid during innitialization
 TIMESTEPS = 10
 NEIGHBOURHOOD = 'Moore'
+TEMPERATURE = 100
 #TODO: APPLY_RULE = CustomRule()
 #TODO: APPLY_RULE = lambda n, c,t: cpl.totalistic_rule(n, k=2, rule=126) # This is the core of what we need to modify to match the paper
 
@@ -181,18 +239,20 @@ STARTING_GRID = innitialize_grid(p)
 ## And the central node has a very high value
 INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID)
 
+SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
 
-#print('Starting grid:\n',STARTING_GRID)
+
+print('Starting grid:\n',STARTING_GRID)
 print('Influence grid:\n',INFLUENCE_GRID)
+print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
 
 
-# Test the influence of every node
 
-index = 0
-for x, y in np.ndindex(STARTING_GRID.shape):
-    social_impact = I(x,y)
-    print('social_impact of other nodes on node at',x,y,'is:',social_impact)
-    index += 1
+# Test the CA opinion rule implementaion to see if we can update the system
+
+STARTING_GRID = get_next_step_grid()
+
+
 
 
 
