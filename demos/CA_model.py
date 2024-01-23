@@ -257,10 +257,7 @@ print('Influence grid:\n',INFLUENCE_GRID)
 print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
 
 # Test the CA opinion rule implementaion to see if we can update the system
-if DETERMINISTIC:
-    STARTING_GRID = get_next_step_grid()
-else:
-    STARTING_GRID = get_next_step_grid()
+STARTING_GRID = get_next_step_grid()
 
 print('New grid:\n',STARTING_GRID)
 
