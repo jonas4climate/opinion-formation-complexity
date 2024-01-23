@@ -4,11 +4,9 @@ Based on the documentation: https://cellpylib.org/twodim.html
 """
 
 import cellpylib as cpl
-
-
 # Global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 30,30
-TIMESTEPS = 10
+GRIDSIZE_X,GRIDSIZE_Y = 40,40
+TIMESTEPS = 100
 NEIGHBOURHOOD = 'Moore'
 
  # This is the core of what we need to modify to match the paper

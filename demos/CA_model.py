@@ -163,25 +163,31 @@ def get_social_impact_grid(INFLUENCE_GRID):
     return SOCIAL_IMPACT_GRID
 
 
-def rule(old_opinion,I_i,T):
+def rule(old_opinion, I_i, T, deterministic):
     """
-    Updates the opinion of node at ix iy based on its neighboors
+    Updates the opinion of node at ix iy based on its neighboyrs
     """
 
-    p_keeping_opinion = (np.exp(-I_i/T))/(np.exp(-I_i/T)+np.exp(I_i/T))
+    # If we use the deterministic model, update accordingly
+    if deterministic:
+        new_opinion = np.sign(I_i * old_opinion)
 
-    # TODO: Add an asert here to ensure 0<p<1
-    #print('p_keeping opinion:',p_keeping_opinion)
-
-
-    # If a random number between 0 and 1 is under the threshold
-    # we stay with the old opinion. Otherwise, we change
-    if p_keeping_opinion < np.random.rand(1):
-        new_opinion = old_opinion
     else:
-        new_opinion = -old_opinion
+        p_keeping_opinion = (np.exp(-I_i/T))/(np.exp(-I_i/T)+np.exp(I_i/T))
+
+        # TODO: Add an asert here to ensure 0<p<1
+        #print('p_keeping opinion:',p_keeping_opinion)
+
+
+        # If a random number between 0 and 1 is under the threshold
+        # we stay with the old opinion. Otherwise, we change
+        if p_keeping_opinion < np.random.rand(1):
+            new_opinion = old_opinion
+        else:
+            new_opinion = -old_opinion
 
     return new_opinion
+
 
 def get_next_step_grid():
     """
@@ -196,6 +202,7 @@ def get_next_step_grid():
     
     # Loop over values that have nodes and update their opinion
     # with their corresponding result from applying the rule
+
     for ix, iy in np.ndindex(INFLUENCE_GRID.shape):
         if INFLUENCE_GRID[ix,iy] != 0:
             # Get the old opinion and social influence at the node
@@ -203,7 +210,7 @@ def get_next_step_grid():
             I_i = SOCIAL_IMPACT_GRID[ix,iy] # Or just do I_i I(ix,iy), for SOCIAL_IMPACT_GRID could actually be redundant
 
             # Apply the rule to get the new opinion
-            new_opinion = rule(old_opinion,I_i,TEMPERATURE)
+            new_opinion = rule(old_opinion,I_i,TEMPERATURE, DETERMINISTIC)
 
             # And update it in the matrix
             NEW_GRID[ix,iy] = new_opinion
@@ -223,6 +230,7 @@ p = 0.4  # This value represents likelihood of adding an individual to an space 
 TIMESTEPS = 10
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 100
+DETERMINISTIC = False
 
 # Model parameters
 BETTA = 1
@@ -232,7 +240,7 @@ assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
 assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 
 
-# Innitialize starting grid
+# Initialize starting grid
 ## It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
 STARTING_GRID = innitialize_grid(p)
 
@@ -244,14 +252,17 @@ INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID)
 # Same for the social impact grid
 SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
 
-
 print('Starting grid:\n',STARTING_GRID)
 print('Influence grid:\n',INFLUENCE_GRID)
 print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
 
-
-
 # Test the CA opinion rule implementaion to see if we can update the system
-STARTING_GRID = get_next_step_grid()
+if DETERMINISTIC:
+    STARTING_GRID = get_next_step_grid()
+else:
+    STARTING_GRID = get_next_step_grid()
 
 print('New grid:\n',STARTING_GRID)
+
+
+# Deterministic limit case

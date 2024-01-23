@@ -11,3 +11,4 @@ cellular_automaton = cpl.evolve(cellular_automaton, timesteps=100, memoize=True,
                                 apply_rule=lambda n, c, t: cpl.nks_rule(n, 30))
 
 cpl.plot(cellular_automaton)
+
