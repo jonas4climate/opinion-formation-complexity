@@ -2,6 +2,14 @@
 CA model from paper 'Phase transitions in social impact models of
 opinion formation'
 
+Next steps
+TODO: Test the code 
+TODO: Replicate the deterministic limit case (2.2 of paper), including the cluster size, to ensure the logic is sound
+TODO: Turn the rule implementation into CellPyLib syntax
+TODO: Tune the parameters and replicate other parts of the paper
+
+
+Extra optimizations
 TODO: Because the cells do not move and just change their mind, we should be able to optimize the code
 computing distances only once, and removing most matrices to speed up things
 
@@ -90,7 +98,6 @@ def d(x0,y0,x1,y1):
     -|j|-
     -|-|-
     """
-
     return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
 
@@ -106,8 +113,9 @@ def g(x):
 def I(ix,iy):
     """
     Social impact exerted on a particular node i (with coordinates ix and iy) by the other nodes
-
-    Is is a function of the influence of our node (si), its s
+    Is is a function of the opinion and influence of our node (si, sigma_i),
+    the individual fixation parameter (BETTA), the EXTERNAL_INFLUENCE parameter
+    and the opinion and influence of other nodes 
     
     """
     
@@ -118,7 +126,6 @@ def I(ix,iy):
     # Compute the influence of the other nodes
     ## Notice that when there is no node in a coordinate, STARTING_GRID is 0
     influence_sum = 0
-
 
     for jx, jy in np.ndindex(STARTING_GRID.shape):    
         ## If we are not in the position of our node
@@ -132,7 +139,6 @@ def I(ix,iy):
                 ### Recall that if there is no cell here, we just add a 0
                 ### So we should be ok, plus it should be efficient enough
                 influence_sum += (s_j * sigma_i * sigma_j )/d(ix,iy,jx,jy)
-
 
     return -s_i*BETTA - sigma_i*EXTERNAL_INFLUENCE - influence_sum #
 
@@ -217,13 +223,10 @@ p = 0.4  # This value represents likelihood of adding an individual to an space 
 TIMESTEPS = 10
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 100
-#TODO: APPLY_RULE = CustomRule()
-#TODO: APPLY_RULE = lambda n, c,t: cpl.totalistic_rule(n, k=2, rule=126) # This is the core of what we need to modify to match the paper
 
 # Model parameters
 BETTA = 1
 EXTERNAL_INFLUENCE = 1/2
-
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
 assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
@@ -233,12 +236,12 @@ assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 ## It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
 STARTING_GRID = innitialize_grid(p)
 
-
 # Create and initialize the influence of nodes of our STARTING_GRID
 ## It is a 2D array of same size, with nodes having positive values from a distribution q
 ## And the central node has a very high value
 INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID)
 
+# Same for the social impact grid
 SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
 
 
@@ -249,16 +252,6 @@ print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
 
 
 # Test the CA opinion rule implementaion to see if we can update the system
-
 STARTING_GRID = get_next_step_grid()
 
-
-
-
-
-# Distance function
-#distance_test = d(0,0,1,1)
-#print(distance_test)
-
-# Social impact
-
+print('New grid:\n',STARTING_GRID)
