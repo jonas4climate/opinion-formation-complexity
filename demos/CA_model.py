@@ -17,6 +17,7 @@ computing distances only once, and removing most matrices to speed up things
 import cellpylib as cpl
 from collections import defaultdict
 import numpy as np
+import matplotlib.pyplot as plt
 
 def innitialize_grid(p,r):
     """
@@ -152,7 +153,9 @@ def I(ix,iy):
                 ### So we should be ok, plus it should be efficient enough
                 influence_sum += (s_j * sigma_i * sigma_j )/d(ix,iy,jx,jy)
 
-    return -s_i*BETTA - sigma_i*EXTERNAL_INFLUENCE - influence_sum #
+    value = -s_i*BETTA - sigma_i*EXTERNAL_INFLUENCE - influence_sum
+
+    return  value #
 
 
 def get_social_impact_grid(INFLUENCE_GRID):
@@ -179,10 +182,18 @@ def rule(old_opinion, I_i, T, deterministic):
     """
     Updates the opinion of node at ix iy based on its neighboyrs
     """
+    if old_opinion == 0:
+        return 0
 
     # If we use the deterministic model, update accordingly
     if T==0:
         new_opinion = -np.sign(I_i * old_opinion)
+        #print(old_opinion)
+        #new_opinion = np.sign(I_i * old_opinion)
+        
+        #print('new_opinion:',old_opinion)
+        #if old_opinion != old_opinion:
+        #    a = 1/0
 
     else:
         p_keeping_opinion = (np.exp(-I_i/T))/(np.exp(-I_i/T)+np.exp(I_i/T))
@@ -215,7 +226,7 @@ def get_next_step_grid():
     # Loop over values that have nodes and update their opinion
     # with their corresponding result from applying the rule
 
-    for ix, iy in np.ndindex(INFLUENCE_GRID.shape):
+    for ix, iy in np.ndindex(STARTING_GRID.shape):
         if INFLUENCE_GRID[ix,iy] != 0:
             # Get the old opinion and social influence at the node
             old_opinion = STARTING_GRID[ix,iy] 
@@ -232,10 +243,17 @@ def get_next_step_grid():
 
 def expect_clusters(r,betta,h,s_l):
     # Ensure both solutions are > 0
+
+    print('First half (2*pi*R-sqrt(pi)+betta-h)^2:',(2*np.pi*r - np.sqrt(np.pi) + betta - h)**2)
+    print('Second half (32*s_l):',32*s_l)
+
     condition_1 = bool((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32*s_l >= 0)
     condition_2 = bool((2*np.pi*r - np.sqrt(np.pi) - betta - h)**2 - 32*s_l >= 0)
     return condition_1 and condition_2
 
+
+def minimun_leader_strength(r,betta,h):
+    return (2*np.pi*r -np.sqrt(np.pi) -h )/betta
 
 
 #########
@@ -243,17 +261,17 @@ def expect_clusters(r,betta,h,s_l):
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 31,31
-p = 0.6  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 200
+GRIDSIZE_X,GRIDSIZE_Y = 55,55
+p = 1  # This value represents likelihood of adding an individual to an space in the grid during innitialization
+TIMESTEPS = 5
 NEIGHBOURHOOD = 'Moore'
-TEMPERATURE = 100
+TEMPERATURE = 0
 DETERMINISTIC = False
 R = GRIDSIZE_X/2
 
 # Model parameters
-BETTA = 1
-EXTERNAL_INFLUENCE = 1/2
+BETTA = 10
+EXTERNAL_INFLUENCE = 100
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
 assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
@@ -292,7 +310,7 @@ SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
 #print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
 
 # Test the CA opinion rule implementaion to see if we can update the system
-STARTING_GRID = get_next_step_grid()
+#STARTING_GRID = get_next_step_grid()
 
 #print('New grid:\n',STARTING_GRID)
 
@@ -307,6 +325,13 @@ cellular_automaton[0,:,:] = STARTING_GRID
 
 # TODO: Fix bug that makes first step be computed 2 times (1 out of the for loop, and one inside it again)
 
+
+expecting_clusters = expect_clusters(R,BETTA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
+print('Do we expect clusters with these parameters?',expecting_clusters)
+
+
+
+
 # For loop of simulation
 for step in range(TIMESTEPS):
     #print(step)
@@ -314,12 +339,27 @@ for step in range(TIMESTEPS):
 
     # Add it to the matrix ?
     grid = get_next_step_grid()
-    cellular_automaton[step,:,:] = grid
+    #cellular_automaton[step,:,:] = grid
+    print(grid)
 
 # Deterministic limit case
 
 # Plot the animation
-cpl.plot2d_animate(cellular_automaton) # Animation
+# TODO: Understand why cpl plot does not work correctly
+#cpl.plot2d(cellular_automaton, timestep=0,title='1')
+#cpl.plot2d(cellular_automaton, timestep=1,title='2')
+#cpl.plot2d(cellular_automaton, timestep=2,title='3')
+#cpl.plot2d(cellular_automaton, timestep=3,title='4')
+#cpl.plot2d(cellular_automaton, timestep=4,title='5')
+#cpl.plot2d_animate(cellular_automaton,interval=250) # Animation
+
+plt.matshow(cellular_automaton[4])
+plt.matshow(cellular_automaton[3])
+plt.matshow(cellular_automaton[2])
+plt.matshow(cellular_automaton[1])
+plt.matshow(cellular_automaton[0])
+plt.show()
+
 
 
 # Deterministic case
