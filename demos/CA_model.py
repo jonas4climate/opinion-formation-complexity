@@ -86,9 +86,9 @@ def initialize_influence_grid(starting_opinion_grid, mean, leader_influence):
     # Fill it with values
     for ix, iy in np.ndindex(starting_opinion_grid.shape):
         # If the corresponding position of STARTING_GRID had -1
-        if starting_opinion_grid[iy, ix] == -1:
+        if starting_opinion_grid[ix, iy] != 0:
             # Give that influence grid coordinate an influence value
-            influence_grid[iy, ix] = q(mean)
+            influence_grid[ix, iy] = q(mean)
 
     # Put a very high value on the center
     #center_value = 100
@@ -124,7 +124,7 @@ def g_distance_scaling(x):
 
 def I_social_impact(ix, iy, ext_influence, beta):
     """
-    Social impact exerted on a particular node i (with coordinates ix and iy) by the other nodes
+    Social impact exerted on a particular node i (with coordinates ix and iy) by all other nodes
     Is is a function of the opinion and influence of our node (si, sigma_i),
     the individual fixation parameter (BETA), the EXTERNAL_INFLUENCE parameter
     and the opinion and influence of other nodes 
@@ -176,7 +176,7 @@ def get_social_impact_grid(influence_grid, ext_influence, beta):
 
 def rule(old_opinion, I_i, T):
     """
-    Updates the opinion of node at ix iy based on its neighboyrs
+    Updates the opinion of node at ix iy based on its neighbors
     """
     if old_opinion == 0:
         return 0
@@ -264,9 +264,9 @@ def minimun_leader_strength(r,beta,h):
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 11,11
+GRIDSIZE_X,GRIDSIZE_Y = 73,73
 TIMESTEPS = 5
-TEMPERATURE = 0 # Stochasticity, 0 is deterministic
+TEMPERATURE = 20 # Stochasticity, 0 is deterministic
 RADIUS_SOCIAL_SPACE = GRIDSIZE_X/2
 
 # Model parameters
@@ -305,14 +305,14 @@ for t in range(TIMESTEPS):
     grid = get_next_step_grid(opinion_grid_history[t,:,:], TEMPERATURE, influence_grid, EXTERNAL_INFLUENCE, BETA)
     opinion_grid_history[t+1,:,:] = grid
 
-cpl.plot2d(opinion_grid_history, timestep=0, title='timestep 0')
-cpl.plot2d(opinion_grid_history, timestep=1, title='timestep 1')
-cpl.plot2d(opinion_grid_history, timestep=2, title='timestep 2')
-cpl.plot2d(opinion_grid_history, timestep=3, title='timestep 3')
-cpl.plot2d(opinion_grid_history, timestep=4, title='timestep 4')
-cpl.plot2d(opinion_grid_history, timestep=5, title='timestep 5')
+# cpl.plot2d(opinion_grid_history, timestep=0, title='timestep 0')
+# cpl.plot2d(opinion_grid_history, timestep=1, title='timestep 1')
+# cpl.plot2d(opinion_grid_history, timestep=2, title='timestep 2')
+# cpl.plot2d(opinion_grid_history, timestep=3, title='timestep 3')
+# cpl.plot2d(opinion_grid_history, timestep=4, title='timestep 4')
+# cpl.plot2d(opinion_grid_history, timestep=5, title='timestep 5')
 
-# cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', show_grid=True)
+cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', show_grid=True, interval=500)
 
 # Deterministic limit case
 
