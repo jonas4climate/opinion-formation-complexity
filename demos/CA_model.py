@@ -39,12 +39,17 @@ def innitialize_grid(p):
     prob_grid = np.random.rand(GRIDSIZE_X,GRIDSIZE_Y)
     STARTING_GRID[prob_grid < p] = -1
     
+    
+
     # Add the leader in the center, which has a 1
     ## Get the index of the center space of each dimension
     ## And update that coordinate of the STARTING_GRID
     center_x = int((GRIDSIZE_X-1)/2)
     center_y = int((GRIDSIZE_Y-1)/2)
     STARTING_GRID[center_x,center_y] = 1
+
+    # TODO: ADD ZEROS OUTSIDE RADIUS R from center
+    
     
     return STARTING_GRID
 
@@ -62,7 +67,7 @@ def q(mean):
 
     return np.random.uniform(0,2*mean)
 
-def innitialize_influence_grid(STARTING_GRID,mean):
+def innitialize_influence_grid(STARTING_GRID,mean,leader_value):
     """
     Returns a np.array of same size as STARTING_GRID, where each node has a certain influence
     given by the distribution q, and the center value gets a much bigger value by design
@@ -81,10 +86,10 @@ def innitialize_influence_grid(STARTING_GRID,mean):
             INFLUENCE_GRID[iy, ix] = q(mean)
 
     # Put a very high value on the center
-    center_value = 100
+    #center_value = 100
     center_x = int((GRIDSIZE_X-1)/2)
     center_y = int((GRIDSIZE_Y-1)/2)
-    INFLUENCE_GRID[center_x,center_y] = center_value
+    INFLUENCE_GRID[center_x,center_y] = leader_value
 
     return INFLUENCE_GRID
 
@@ -171,8 +176,7 @@ def rule(old_opinion, I_i, T, deterministic):
     """
 
     # If we use the deterministic model, update accordingly
-    #if T == 0:
-    if deterministic:
+    if T==0:
         new_opinion = -np.sign(I_i * old_opinion)
 
     else:
@@ -228,9 +232,9 @@ def get_next_step_grid():
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 7,7
-p = 0.4  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 3
+GRIDSIZE_X,GRIDSIZE_Y = 31,31
+p = 1  # This value represents likelihood of adding an individual to an space in the grid during innitialization
+TIMESTEPS = 200
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 0
 DETERMINISTIC = False
@@ -250,30 +254,50 @@ STARTING_GRID = innitialize_grid(p)
 # Create and initialize the influence of nodes of our STARTING_GRID
 ## It is a 2D array of same size, with nodes having positive values from a distribution q
 ## And the central node has a very high value
-
 MEAN = 1
-INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN)
+LEADER_INFLUENCE = 400
+INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN,LEADER_INFLUENCE)
+
+
+# Experiment to test if mean is indeed close to 1
+"""
+exp_mean = 0
+runs = 1000
+for i in range(runs):
+    INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN,LEADER_INFLUENCE)
+    exp_mean += np.mean(INFLUENCE_GRID)/runs
+
+print(exp_mean)
+"""
 
 # Same for the social impact grid
 SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
 
-print('Starting grid:\n',STARTING_GRID)
-print('Influence grid:\n',INFLUENCE_GRID)
-print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
+#print('Starting grid:\n',STARTING_GRID)
+#print('Influence grid:\n',INFLUENCE_GRID)
+#print(np.mean(INFLUENCE_GRID))
+
+#print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
 
 # Test the CA opinion rule implementaion to see if we can update the system
 STARTING_GRID = get_next_step_grid()
 
-print('New grid:\n',STARTING_GRID)
+#print('New grid:\n',STARTING_GRID)
 
+
+
+# Try to replicate determinisitc case.
+# For this we need to get the points from Fig. 1.
 
 
 cellular_automaton = np.ndarray((TIMESTEPS,GRIDSIZE_X,GRIDSIZE_Y))
 cellular_automaton[0,:,:] = STARTING_GRID
 
+# TODO: Fix bug that makes first step be computed 2 times (1 out of the for loop, and one inside it again)
+
 # For loop of simulation
 for step in range(TIMESTEPS):
-    print(step)
+    #print(step)
     # Compute next step 
 
     # Add it to the matrix ?
@@ -281,8 +305,6 @@ for step in range(TIMESTEPS):
     cellular_automaton[step,:,:] = grid
 
 # Deterministic limit case
-
-print(cellular_automaton)
 
 # Plot the animation
 cpl.plot2d_animate(cellular_automaton) # Animation
