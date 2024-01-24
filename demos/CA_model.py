@@ -18,7 +18,7 @@ import cellpylib as cpl
 from collections import defaultdict
 import numpy as np
 
-def innitialize_grid(p):
+def innitialize_grid(p,r):
     """
     Returns a 2D numpy array with a 1 in the center,
     -1 in the other cells (with probability p) and 0 elsewhere
@@ -47,7 +47,12 @@ def innitialize_grid(p):
     center_x = int((GRIDSIZE_X-1)/2)
     center_y = int((GRIDSIZE_Y-1)/2)
     STARTING_GRID[center_x,center_y] = 1
-
+    
+    for x0 in range(GRIDSIZE_X):
+        for y0 in range(GRIDSIZE_Y):
+            if d(x0,y0,center_x,center_y) > r:
+               STARTING_GRID[x0,y0] = 0
+               
     # TODO: ADD ZEROS OUTSIDE RADIUS R from center
     
     
@@ -238,6 +243,7 @@ TIMESTEPS = 200
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 0
 DETERMINISTIC = False
+R = GRIDSIZE_X/2
 
 # Model parameters
 BETTA = 1
@@ -249,7 +255,7 @@ assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 
 # Initialize starting grid
 ## It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
-STARTING_GRID = innitialize_grid(p)
+STARTING_GRID = innitialize_grid(p,r=R)
 
 # Create and initialize the influence of nodes of our STARTING_GRID
 ## It is a 2D array of same size, with nodes having positive values from a distribution q
