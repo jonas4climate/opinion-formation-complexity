@@ -17,6 +17,7 @@ computing distances only once, and removing most matrices to speed up things
 import cellpylib as cpl
 from collections import defaultdict
 import numpy as np
+from math import pi, sqrt
 
 def innitialize_grid(p):
     """
@@ -305,6 +306,17 @@ for step in range(TIMESTEPS):
     cellular_automaton[step,:,:] = grid
 
 # Deterministic limit case
+def cluster_size(R, beta, h):
+    """
+    Calculate the cluster size in determistic model case
+    Assumptions here:
+        - g(r) = r
+        - mean s = 1
+    """
+
+    a = 1/16*(2*pi*R - sqrt(pi) * np.sign())
+
+
 
 # Plot the animation
 cpl.plot2d_animate(cellular_automaton) # Animation
