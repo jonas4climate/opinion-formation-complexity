@@ -10,6 +10,7 @@ dependencies:
   - networkx
   - matplotlib
   - seaborn
+  - numba
   - pip
   - pip:
     - cellpylib
