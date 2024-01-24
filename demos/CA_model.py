@@ -48,18 +48,21 @@ def innitialize_grid(p):
     
     return STARTING_GRID
 
-def q():
+def q(mean):
     """
     Returns a random positive number from a distribution.
     As of now it is a uniform distribution within 0 and 1
     
-    TODO: Add mean as a parameter
+    TODO: Add more parameters :)
     """
 
 
-    return np.random.rand(1)
+    ## To comply with the deterministic scenario of paper (section 2.2)
+    ## We must sample from a distribution with mean 1
 
-def innitialize_influence_grid(STARTING_GRID):
+    return np.random.uniform(0,2*mean)
+
+def innitialize_influence_grid(STARTING_GRID,mean):
     """
     Returns a np.array of same size as STARTING_GRID, where each node has a certain influence
     given by the distribution q, and the center value gets a much bigger value by design
@@ -75,7 +78,7 @@ def innitialize_influence_grid(STARTING_GRID):
         # If the corresponding position of STARTING_GRID had -1
         if STARTING_GRID[iy, ix] == -1:
             # Give that influence grid coordinate an influence value
-            INFLUENCE_GRID[iy, ix] = q()
+            INFLUENCE_GRID[iy, ix] = q(mean)
 
     # Put a very high value on the center
     center_value = 100
@@ -107,7 +110,7 @@ def g(x):
     
     TODO: Use network theory to use an even better function for distance scaling
     """
-    return x**2
+    return x #**2
 
 def I(ix,iy):
     """
@@ -229,7 +232,7 @@ GRIDSIZE_X,GRIDSIZE_Y = 7,7
 p = 0.4  # This value represents likelihood of adding an individual to an space in the grid during innitialization
 TIMESTEPS = 3
 NEIGHBOURHOOD = 'Moore'
-TEMPERATURE = 100
+TEMPERATURE = 0
 DETERMINISTIC = False
 
 # Model parameters
@@ -247,7 +250,9 @@ STARTING_GRID = innitialize_grid(p)
 # Create and initialize the influence of nodes of our STARTING_GRID
 ## It is a 2D array of same size, with nodes having positive values from a distribution q
 ## And the central node has a very high value
-INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID)
+
+MEAN = 1
+INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN)
 
 # Same for the social impact grid
 SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
@@ -283,11 +288,7 @@ print(cellular_automaton)
 cpl.plot2d_animate(cellular_automaton) # Animation
 
 
+# Deterministic case
+## Update q to have mean of 1
+## Update g(r) to be r
 
-# TODO: Try plotting with CellPyLib functions
-
-# Pyplot matrix matplot ! -> 
-
-#ca = [STARTING_GRID]
-
-#cpl.plot2d(ca)
