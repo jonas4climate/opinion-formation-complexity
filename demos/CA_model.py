@@ -225,6 +225,12 @@ def get_next_step_grid():
     return NEW_GRID
 
 
+def expect_clusters(r,betta,h,s_l):
+    # Ensure both solutions are > 0
+    condition_1 = bool((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32*s_l >= 0)
+    condition_2 = bool((2*np.pi*r - np.sqrt(np.pi) - betta - h)**2 - 32*s_l >= 0)
+    return condition_1 and condition_2
+
 
 
 #########
@@ -233,10 +239,10 @@ def get_next_step_grid():
 
 # Set global parameters
 GRIDSIZE_X,GRIDSIZE_Y = 31,31
-p = 1  # This value represents likelihood of adding an individual to an space in the grid during innitialization
+p = 0.6  # This value represents likelihood of adding an individual to an space in the grid during innitialization
 TIMESTEPS = 200
 NEIGHBOURHOOD = 'Moore'
-TEMPERATURE = 0
+TEMPERATURE = 100
 DETERMINISTIC = False
 
 # Model parameters
