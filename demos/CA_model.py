@@ -169,6 +169,7 @@ def rule(old_opinion, I_i, T, deterministic):
     """
 
     # If we use the deterministic model, update accordingly
+    #if T == 0:
     if deterministic:
         new_opinion = np.sign(I_i * old_opinion)
 
@@ -225,9 +226,9 @@ def get_next_step_grid():
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 3,3
+GRIDSIZE_X,GRIDSIZE_Y = 7,7
 p = 0.4  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 10
+TIMESTEPS = 7
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 100
 DETERMINISTIC = False
@@ -262,4 +263,36 @@ STARTING_GRID = get_next_step_grid()
 print('New grid:\n',STARTING_GRID)
 
 
+
+cellular_automaton = np.ndarray((GRIDSIZE_X,GRIDSIZE_Y,TIMESTEPS))
+
+# Create grid object ???
+
+cellular_automaton[:,:,0] = STARTING_GRID
+
+# For loop of simulation
+for step in range(TIMESTEPS):
+    print(step)
+    # Compute next step 
+
+    # Add it to the matrix ?
+    GRID = np.zeros((GRIDSIZE_X,GRIDSIZE_Y))
+    GRID = get_next_step_grid()
+    cellular_automaton[:,:,step] = GRID
+
 # Deterministic limit case
+
+print(cellular_automaton)
+
+# Plot the animation
+cpl.plot2d_animate(cellular_automaton) # Animation
+
+
+
+# TODO: Try plotting with CellPyLib functions
+
+# Pyplot matrix matplot ! -> 
+
+#ca = [STARTING_GRID]
+
+#cpl.plot2d(ca)
