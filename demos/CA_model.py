@@ -227,7 +227,7 @@ def get_next_step_grid():
 # Set global parameters
 GRIDSIZE_X,GRIDSIZE_Y = 7,7
 p = 0.4  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 7
+TIMESTEPS = 3
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 100
 DETERMINISTIC = False
@@ -263,11 +263,8 @@ print('New grid:\n',STARTING_GRID)
 
 
 
-cellular_automaton = np.ndarray((GRIDSIZE_X,GRIDSIZE_Y,TIMESTEPS))
-
-# Create grid object ???
-
-cellular_automaton[:,:,0] = STARTING_GRID
+cellular_automaton = np.ndarray((TIMESTEPS,GRIDSIZE_X,GRIDSIZE_Y))
+cellular_automaton[0,:,:] = STARTING_GRID
 
 # For loop of simulation
 for step in range(TIMESTEPS):
@@ -275,9 +272,8 @@ for step in range(TIMESTEPS):
     # Compute next step 
 
     # Add it to the matrix ?
-    GRID = np.zeros((GRIDSIZE_X,GRIDSIZE_Y))
-    GRID = get_next_step_grid()
-    cellular_automaton[:,:,step] = GRID
+    grid = get_next_step_grid()
+    cellular_automaton[step,:,:] = grid
 
 # Deterministic limit case
 
