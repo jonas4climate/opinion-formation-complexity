@@ -264,17 +264,17 @@ def minimun_leader_strength(r,beta,h):
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 55,55
+GRIDSIZE_X,GRIDSIZE_Y = 9,9
 p = 1  # This value represents likelihood of adding an individual to an space in the grid during innitialization
 TIMESTEPS = 5
 NEIGHBOURHOOD = 'Moore'
-TEMPERATURE = 0
+TEMPERATURE = 100
 DETERMINISTIC = False
 RADIUS_SOCIAL_SPACE = GRIDSIZE_X/2
 
 # Model parameters
-BETA = 10
-EXTERNAL_INFLUENCE = 100
+BETA = 10000
+EXTERNAL_INFLUENCE = 1
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
 assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
@@ -332,6 +332,9 @@ opinion_grid_history[0,:,:] = starting_opinion_grid
 expecting_clusters = analytical_expect_clusters(RADIUS_SOCIAL_SPACE,BETA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
 print('Do we expect clusters with these parameters?', expecting_clusters)
 
+if expecting_clusters:
+    expected_cluster_size = a(RADIUS_SOCIAL_SPACE,BETA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
+    print('Expected size:', expected_cluster_size)
 
 
 
@@ -341,7 +344,7 @@ for step in range(TIMESTEPS):
     opinion_grid_history[step+1,:,:] = grid
     print(grid)
 
-cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', interval=250)
+#cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', interval=250)
 
 
 # Deterministic limit case
