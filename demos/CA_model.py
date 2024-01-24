@@ -251,6 +251,14 @@ def expect_clusters(r,betta,h,s_l):
     condition_2 = bool((2*np.pi*r - np.sqrt(np.pi) - betta - h)**2 - 32*s_l >= 0)
     return condition_1 and condition_2
 
+def a(r,betta,h,s_l):
+    """
+    Calculate the cluster size in determistic model case assuming g(r) = r and mean s = 1
+    """
+    a_1 = 1/16*(2*np.pi*r - np.sqrt(np.pi) + betta - h + np.sqrt((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32 * s_l))
+    a_2 = 1/16*(2*np.pi*r - np.sqrt(np.pi) - betta - h - np.sqrt((2*np.pi*r - np.sqrt(np.pi) - betta - h)**2 - 32 * s_l))
+
+    return a_1, a_2
 
 def minimun_leader_strength(r,betta,h):
     return (2*np.pi*r -np.sqrt(np.pi) -h )/betta
