@@ -19,7 +19,7 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
-def innitialize_grid(p,r):
+def initialize_opinion_grid(p_exists,radius):
     """
     Returns a 2D numpy array with a 1 in the center,
     -1 in the other cells (with probability p) and 0 elsewhere
@@ -31,33 +31,30 @@ def innitialize_grid(p,r):
     assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
     assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 
-    # Create empty array
-    STARTING_GRID = np.zeros((GRIDSIZE_X,GRIDSIZE_Y))
+    starting_opinion_grid = np.zeros((GRIDSIZE_X,GRIDSIZE_Y))
 
-    # Add -1 to it randomly with probability p
-    ## Create grid of probabilities
-    ## Update the values of our grid that met the probability threshold
-    prob_grid = np.random.rand(GRIDSIZE_X,GRIDSIZE_Y)
-    STARTING_GRID[prob_grid < p] = -1
+    # Add -1 to the opinion grid randomly with probability p
+    # Create grid of probabilities
+    # Update the values of our grid that met the probability threshold
+    p_grid = np.random.rand(GRIDSIZE_X,GRIDSIZE_Y)
+    starting_opinion_grid[p_grid < p_exists] = -1
     
     
 
-    # Add the leader in the center, which has a 1
-    ## Get the index of the center space of each dimension
-    ## And update that coordinate of the STARTING_GRID
+    # Add the leader in the center, which has opinion 1
+    # Get the index of the center space of each dimension
+    # And update that coordinate of the STARTING_GRID
     center_x = int((GRIDSIZE_X-1)/2)
     center_y = int((GRIDSIZE_Y-1)/2)
-    STARTING_GRID[center_x,center_y] = 1
+    starting_opinion_grid[center_x,center_y] = 1
     
-    for x0 in range(GRIDSIZE_X):
-        for y0 in range(GRIDSIZE_Y):
-            if d(x0,y0,center_x,center_y) > r:
-               STARTING_GRID[x0,y0] = 0
-               
-    # TODO: ADD ZEROS OUTSIDE RADIUS R from center
-    
-    
-    return STARTING_GRID
+    # Exclude any individuals beyond the circle radius
+    for x_idx in range(GRIDSIZE_X):
+        for y_idx in range(GRIDSIZE_Y):
+            if d(x_idx,y_idx,center_x,center_y) > radius:
+               starting_opinion_grid[x_idx,y_idx] = 0
+             
+    return starting_opinion_grid
 
 def q(mean):
     """
@@ -73,7 +70,7 @@ def q(mean):
 
     return np.random.uniform(0,2*mean)
 
-def innitialize_influence_grid(STARTING_GRID,mean,leader_value):
+def initialize_influence_grid(starting_opinion_grid, mean, leader_value):
     """
     Returns a np.array of same size as STARTING_GRID, where each node has a certain influence
     given by the distribution q, and the center value gets a much bigger value by design
@@ -82,22 +79,22 @@ def innitialize_influence_grid(STARTING_GRID,mean,leader_value):
     """
 
     # Create an empty matrix
-    INFLUENCE_GRID = np.zeros((GRIDSIZE_X,GRIDSIZE_Y)) #STARTING_GRID
+    influence_grid = np.zeros((GRIDSIZE_X,GRIDSIZE_Y)) #STARTING_GRID
 
     # Fill it with values
-    for ix, iy in np.ndindex(STARTING_GRID.shape):
+    for ix, iy in np.ndindex(starting_opinion_grid.shape):
         # If the corresponding position of STARTING_GRID had -1
-        if STARTING_GRID[iy, ix] == -1:
+        if starting_opinion_grid[iy, ix] == -1:
             # Give that influence grid coordinate an influence value
-            INFLUENCE_GRID[iy, ix] = q(mean)
+            influence_grid[iy, ix] = q(mean)
 
     # Put a very high value on the center
     #center_value = 100
     center_x = int((GRIDSIZE_X-1)/2)
     center_y = int((GRIDSIZE_Y-1)/2)
-    INFLUENCE_GRID[center_x,center_y] = leader_value
+    influence_grid[center_x,center_y] = leader_value
 
-    return INFLUENCE_GRID
+    return influence_grid
 
 
 def d(x0,y0,x1,y1):
@@ -123,29 +120,29 @@ def g(x):
     """
     return x #**2
 
-def I(ix,iy):
+def I(ix, iy, ext_influence, beta):
     """
     Social impact exerted on a particular node i (with coordinates ix and iy) by the other nodes
     Is is a function of the opinion and influence of our node (si, sigma_i),
-    the individual fixation parameter (BETTA), the EXTERNAL_INFLUENCE parameter
+    the individual fixation parameter (BETA), the EXTERNAL_INFLUENCE parameter
     and the opinion and influence of other nodes 
     
     """
     
     # Retrieve the opinion and influence of our node
-    s_i = INFLUENCE_GRID[ix,iy]
-    sigma_i =  STARTING_GRID[ix,iy]
+    s_i = influence_grid[ix,iy]
+    sigma_i =  starting_opinion_grid[ix,iy]
 
     # Compute the influence of the other nodes
     ## Notice that when there is no node in a coordinate, STARTING_GRID is 0
     influence_sum = 0
 
-    for jx, jy in np.ndindex(STARTING_GRID.shape):    
+    for jx, jy in np.ndindex(starting_opinion_grid.shape):    
         ## If we are not in the position of our node
         if not (ix == jx and iy == jy):
             ## And if we have a cell here (sigma_j != 0 or s_j != 0)
-            sigma_j =  STARTING_GRID[jx,jy]
-            s_j = INFLUENCE_GRID[jx,jy]
+            sigma_j =  starting_opinion_grid[jx,jy]
+            s_j = influence_grid[jx,jy]
                         
             if s_j != 0:
                 ### We need to add another term to the sum
@@ -153,29 +150,27 @@ def I(ix,iy):
                 ### So we should be ok, plus it should be efficient enough
                 influence_sum += (s_j * sigma_i * sigma_j )/d(ix,iy,jx,jy)
 
-    value = -s_i*BETTA - sigma_i*EXTERNAL_INFLUENCE - influence_sum
+    value = -s_i*beta - sigma_i*ext_influence - influence_sum
 
     return  value #
 
 
-def get_social_impact_grid(INFLUENCE_GRID):
+def get_social_impact_grid(influence_grid, ext_influence, beta):
     """
     Returns a grid with the corresponding social impact that every node has from the others
     """
 
     # Start with an empty matrix
-    SOCIAL_IMPACT_GRID = np.zeros(INFLUENCE_GRID.shape)
+    social_impact_grid = np.zeros(influence_grid.shape)
 
     # Loop over values that have nodes and update them
     # with their corresponding social impact
-    for ix, iy in np.ndindex(INFLUENCE_GRID.shape):
-        if INFLUENCE_GRID[ix,iy] != 0:
-            
-            impact = I(ix,iy)
+    for ix, iy in np.ndindex(influence_grid.shape):
+        if influence_grid[ix,iy] != 0:
+            impact = I(ix,iy, ext_influence, beta)
+            social_impact_grid[ix,iy] = impact
 
-            SOCIAL_IMPACT_GRID[ix,iy] = impact
-
-    return SOCIAL_IMPACT_GRID
+    return social_impact_grid
 
 
 def rule(old_opinion, I_i, T, deterministic):
@@ -212,7 +207,7 @@ def rule(old_opinion, I_i, T, deterministic):
     return new_opinion
 
 
-def get_next_step_grid():
+def get_next_step_grid(opinion_grid):
     """
     Returns the array of the next time step by applying the opinion changing rule to all cells
 
@@ -221,34 +216,34 @@ def get_next_step_grid():
     """
 
     # Start with an empty matrix
-    NEW_GRID = np.zeros(STARTING_GRID.shape)
+    new_opinion_grid = np.zeros(opinion_grid.shape)
     
     # Loop over values that have nodes and update their opinion
     # with their corresponding result from applying the rule
 
-    for ix, iy in np.ndindex(STARTING_GRID.shape):
-        if INFLUENCE_GRID[ix,iy] != 0:
+    for ix, iy in np.ndindex(opinion_grid.shape):
+        if influence_grid[ix,iy] != 0:
             # Get the old opinion and social influence at the node
-            old_opinion = STARTING_GRID[ix,iy] 
-            I_i = SOCIAL_IMPACT_GRID[ix,iy] # Or just do I_i I(ix,iy), for SOCIAL_IMPACT_GRID could actually be redundant
+            old_opinion = opinion_grid[ix,iy] 
+            I_i = social_impact_grid[ix,iy] # Or just do I_i I(ix,iy), for SOCIAL_IMPACT_GRID could actually be redundant
 
             # Apply the rule to get the new opinion
             new_opinion = rule(old_opinion,I_i,TEMPERATURE, DETERMINISTIC)
 
             # And update it in the matrix
-            NEW_GRID[ix,iy] = new_opinion
+            new_opinion_grid[ix,iy] = new_opinion
 
-    return NEW_GRID
+    return new_opinion_grid
 
 
-def expect_clusters(r,betta,h,s_l):
+def analytical_expect_clusters(r,beta,h,s_l):
     # Ensure both solutions are > 0
 
-    print('First half (2*pi*R-sqrt(pi)+betta-h)^2:',(2*np.pi*r - np.sqrt(np.pi) + betta - h)**2)
+    print('First half (2*pi*R-sqrt(pi)+beta-h)^2:',(2*np.pi*r - np.sqrt(np.pi) + beta - h)**2)
     print('Second half (32*s_l):',32*s_l)
 
-    condition_1 = bool((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32*s_l >= 0)
-    condition_2 = bool((2*np.pi*r - np.sqrt(np.pi) - betta - h)**2 - 32*s_l >= 0)
+    condition_1 = bool((2*np.pi*r - np.sqrt(np.pi) + beta - h)**2 - 32*s_l >= 0)
+    condition_2 = bool((2*np.pi*r - np.sqrt(np.pi) - beta - h)**2 - 32*s_l >= 0)
     return condition_1 and condition_2
 
 def a(r,betta,h,s_l):
@@ -260,8 +255,8 @@ def a(r,betta,h,s_l):
 
     return a_1, a_2
 
-def minimun_leader_strength(r,betta,h):
-    return (2*np.pi*r -np.sqrt(np.pi) -h )/betta
+def minimun_leader_strength(r,beta,h):
+    return (2*np.pi*r -np.sqrt(np.pi) -h )/beta
 
 
 #########
@@ -275,10 +270,10 @@ TIMESTEPS = 5
 NEIGHBOURHOOD = 'Moore'
 TEMPERATURE = 0
 DETERMINISTIC = False
-R = GRIDSIZE_X/2
+RADIUS_SOCIAL_SPACE = GRIDSIZE_X/2
 
 # Model parameters
-BETTA = 10
+BETA = 10
 EXTERNAL_INFLUENCE = 100
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
@@ -287,29 +282,29 @@ assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 
 # Initialize starting grid
 ## It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
-STARTING_GRID = innitialize_grid(p,r=R)
+starting_opinion_grid = initialize_opinion_grid(p,radius=RADIUS_SOCIAL_SPACE)
 
 # Create and initialize the influence of nodes of our STARTING_GRID
 ## It is a 2D array of same size, with nodes having positive values from a distribution q
 ## And the central node has a very high value
-MEAN = 1
+POPULATION_INFLUENCE_MEAN = 1
 LEADER_INFLUENCE = 400
-INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN,LEADER_INFLUENCE)
+influence_grid = initialize_influence_grid(starting_opinion_grid,POPULATION_INFLUENCE_MEAN,LEADER_INFLUENCE)
 
 
 # Experiment to test if mean is indeed close to 1
-"""
-exp_mean = 0
-runs = 1000
-for i in range(runs):
-    INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN,LEADER_INFLUENCE)
-    exp_mean += np.mean(INFLUENCE_GRID)/runs
+# """
+# exp_mean = 0
+# runs = 1000
+# for i in range(runs):
+#     INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN,LEADER_INFLUENCE)
+#     exp_mean += np.mean(INFLUENCE_GRID)/runs
 
-print(exp_mean)
-"""
+# print(exp_mean)
+# """
 
 # Same for the social impact grid
-SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
+social_impact_grid = get_social_impact_grid(influence_grid, ext_influence=EXTERNAL_INFLUENCE, beta=BETA)
 
 #print('Starting grid:\n',STARTING_GRID)
 #print('Influence grid:\n',INFLUENCE_GRID)
@@ -328,27 +323,26 @@ SOCIAL_IMPACT_GRID = get_social_impact_grid(INFLUENCE_GRID)
 # For this we need to get the points from Fig. 1.
 
 
-cellular_automaton = np.ndarray((TIMESTEPS,GRIDSIZE_X,GRIDSIZE_Y))
-cellular_automaton[0,:,:] = STARTING_GRID
+opinion_grid_history = np.ndarray((TIMESTEPS+1,GRIDSIZE_X,GRIDSIZE_Y))
+opinion_grid_history[0,:,:] = starting_opinion_grid
 
 # TODO: Fix bug that makes first step be computed 2 times (1 out of the for loop, and one inside it again)
 
 
-expecting_clusters = expect_clusters(R,BETTA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
-print('Do we expect clusters with these parameters?',expecting_clusters)
+expecting_clusters = analytical_expect_clusters(RADIUS_SOCIAL_SPACE,BETA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
+print('Do we expect clusters with these parameters?', expecting_clusters)
 
 
 
 
 # For loop of simulation
 for step in range(TIMESTEPS):
-    #print(step)
-    # Compute next step 
-
-    # Add it to the matrix ?
-    grid = get_next_step_grid()
-    #cellular_automaton[step,:,:] = grid
+    grid = get_next_step_grid(opinion_grid_history[step,:,:])
+    opinion_grid_history[step+1,:,:] = grid
     print(grid)
+
+cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', interval=250)
+
 
 # Deterministic limit case
 
@@ -361,12 +355,9 @@ for step in range(TIMESTEPS):
 #cpl.plot2d(cellular_automaton, timestep=4,title='5')
 #cpl.plot2d_animate(cellular_automaton,interval=250) # Animation
 
-plt.matshow(cellular_automaton[4])
-plt.matshow(cellular_automaton[3])
-plt.matshow(cellular_automaton[2])
-plt.matshow(cellular_automaton[1])
-plt.matshow(cellular_automaton[0])
-plt.show()
+# plt.matshow(opinion_grid_history[0])
+# plt.matshow(opinion_grid_history[4])
+# plt.show()
 
 
 
