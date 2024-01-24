@@ -57,7 +57,6 @@ def q():
     """
 
 
-
     return np.random.rand(1)
 
 def innitialize_influence_grid(STARTING_GRID):
@@ -171,7 +170,7 @@ def rule(old_opinion, I_i, T, deterministic):
     # If we use the deterministic model, update accordingly
     #if T == 0:
     if deterministic:
-        new_opinion = np.sign(I_i * old_opinion)
+        new_opinion = -np.sign(I_i * old_opinion)
 
     else:
         p_keeping_opinion = (np.exp(-I_i/T))/(np.exp(-I_i/T)+np.exp(I_i/T))
