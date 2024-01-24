@@ -18,6 +18,7 @@ import cellpylib as cpl
 from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
+from logging import warning, error, info
 # from numba import njit, jit, prange
 
 def initialize_opinion_grid(p_exists,radius):
@@ -210,11 +211,10 @@ def get_next_step_grid(opinion_grid, temperature, influence_grid, ext_influence,
     """
     Returns the array of the next time step by applying the opinion changing rule to all cells
 
-    TODO: Turn this into the rule format of Cellpylib (see https://cellpylib.org/additional.html#custom-rules)
+    TODO: Turn this into the rule formsat of Cellpylib (see https://cellpylib.org/additional.html#custom-rules)
     or, alternatively, develop our own functions for simulation and plotting
     """
 
-    # Start with an empty matrix
     new_opinion_grid = np.zeros(opinion_grid.shape)
 
     social_impact_grid = get_social_impact_grid(influence_grid, ext_influence, beta)
@@ -264,16 +264,17 @@ def minimun_leader_strength(r,beta,h):
 #########
 
 # Set global parameters
-GRIDSIZE_X,GRIDSIZE_Y = 9,9
-p = 1  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 20
-NEIGHBOURHOOD = 'Moore'
-TEMPERATURE = 0
+GRIDSIZE_X,GRIDSIZE_Y = 11,11
+TIMESTEPS = 5
+TEMPERATURE = 0 # Stochasticity, 0 is deterministic
 RADIUS_SOCIAL_SPACE = GRIDSIZE_X/2
 
 # Model parameters
-BETA = 1
-EXTERNAL_INFLUENCE = 1
+P_NODE_EXISTS = 1
+BETA = 0
+EXTERNAL_INFLUENCE = 0
+POPULATION_INFLUENCE_MEAN = 1
+LEADER_INFLUENCE = 10
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
 assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
@@ -281,42 +282,13 @@ assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
 
 # Initialize starting grid
 ## It is a odd 2D np.array that has a 1 in its center, some -1s around it and the rest 0 (both sides must be odd)
-starting_opinion_grid = initialize_opinion_grid(p,radius=RADIUS_SOCIAL_SPACE)
+starting_opinion_grid = initialize_opinion_grid(P_NODE_EXISTS, radius=RADIUS_SOCIAL_SPACE)
 
 # Create and initialize the influence of nodes of our STARTING_GRID
 ## It is a 2D array of same size, with nodes having positive values from a distribution q
 ## And the central node has a very high value
-POPULATION_INFLUENCE_MEAN = 1
-LEADER_INFLUENCE = 400
 influence_grid = initialize_influence_grid(starting_opinion_grid, mean=POPULATION_INFLUENCE_MEAN, leader_influence=LEADER_INFLUENCE)
-
-
-# Experiment to test if mean is indeed close to 1
-# """
-# exp_mean = 0
-# runs = 1000
-# for i in range(runs):
-#     INFLUENCE_GRID = innitialize_influence_grid(STARTING_GRID,MEAN,LEADER_INFLUENCE)
-#     exp_mean += np.mean(INFLUENCE_GRID)/runs
-
-# print(exp_mean)
-# """
-
-# Same for the social impact grid
 social_impact_grid = get_social_impact_grid(influence_grid, ext_influence=EXTERNAL_INFLUENCE, beta=BETA)
-
-#print('Starting grid:\n',STARTING_GRID)
-#print('Influence grid:\n',INFLUENCE_GRID)
-#print(np.mean(INFLUENCE_GRID))
-
-#print('Social impact grid:\n',SOCIAL_IMPACT_GRID)
-
-# Test the CA opinion rule implementaion to see if we can update the system
-#STARTING_GRID = get_next_step_grid()
-
-#print('New grid:\n',STARTING_GRID)
-
-
 
 # Try to replicate determinisitc case.
 # For this we need to get the points from Fig. 1.
@@ -327,15 +299,11 @@ opinion_grid_history[0,:,:] = starting_opinion_grid
 expecting_clusters = analytical_expect_clusters(RADIUS_SOCIAL_SPACE,BETA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
 print('Do we expect clusters with these parameters?', expecting_clusters)
 
-
-
-
 # For loop of simulation
 for t in range(TIMESTEPS):
     print(t)
     grid = get_next_step_grid(opinion_grid_history[t,:,:], TEMPERATURE, influence_grid, EXTERNAL_INFLUENCE, BETA)
     opinion_grid_history[t+1,:,:] = grid
-    # print(grid)
 
 cpl.plot2d(opinion_grid_history, timestep=0, title='timestep 0')
 cpl.plot2d(opinion_grid_history, timestep=1, title='timestep 1')
