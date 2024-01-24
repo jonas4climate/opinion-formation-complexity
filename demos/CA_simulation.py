@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 GRIDSIZE_X,GRIDSIZE_Y = 15,15
 TIMESTEPS = 5
 TEMPERATURE = 0
-BETA_PEOPLE = 100
-BETA_LEADER = 10000
-H = 1
+BETA_PEOPLE = 10
+BETA_LEADER = 1000
+H = 20
 p = 1  # Inital. likelihood of individual in social space
 s_L = 40000   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
@@ -58,18 +58,29 @@ OPINION_COLOR_1 = (255,0,0)
 OPINION_COLOR_2 = (0,0,255)
 
 
+fig, ax = plt.subplots()
+
+
 for time_step in range(TIMESTEPS):
     
     # Retrieve plot
     grid_t = simulation[time_step,:,:]
 
     # Create 2D plot
-    plt.imshow(grid_t, cmap='seismic', interpolation='nearest')
+    im = ax.imshow(grid_t, cmap='seismic', interpolation='nearest')
     #plt.colorbar()
 
-    plt.title("Frame: "+str(time_step+1)+'/'+str(TIMESTEPS))
-    plt.show(block=False)  
+    for n in range(N):
+        x,y = int(node_coordinates[n,0]),int(node_coordinates[n,1])
+        text = ax.text(y, x, int(grid_t[x, y]), ha="center", va="center", color="w")
+
+    ax.set_title("Frame: "+str(time_step+1)+'/'+str(TIMESTEPS))
+    
+    fig.tight_layout()
+    plt.show(block=False)
+    
     plt.pause(0.3)
+    ax.clear()
     #plt.close()
 
 # Keep last frame until manually closing it
