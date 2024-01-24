@@ -18,7 +18,7 @@ BETA_PEOPLE = 100
 BETA_LEADER = 10000
 H = 1
 p = 1  # Inital. likelihood of individual in social space
-s_L = 400   # Leader influence
+s_L = 40000   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
 ################################
@@ -50,5 +50,27 @@ for time_step in range(TIMESTEPS-1):
 
 # Plot
 
-cpl.plot2d_animate(simulation,interval=250)
+#cpl.plot2d_animate(simulation,interval=250)
 
+# Custom plotting
+EMPTY_COLOR = (0,0,0)
+OPINION_COLOR_1 = (255,0,0)
+OPINION_COLOR_2 = (0,0,255)
+
+
+for time_step in range(TIMESTEPS):
+    
+    # Retrieve plot
+    grid_t = simulation[time_step,:,:]
+
+    # Create 2D plot
+    plt.imshow(grid_t, cmap='seismic', interpolation='nearest')
+    #plt.colorbar()
+
+    plt.title("Frame: "+str(time_step+1)+'/'+str(TIMESTEPS))
+    plt.show(block=False)  
+    plt.pause(0.3)
+    #plt.close()
+
+# Keep last frame until manually closing it
+plt.show(block=True)
