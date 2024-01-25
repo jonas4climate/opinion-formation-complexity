@@ -83,7 +83,7 @@ for time_step in range(TIMESTEPS):
 
     for n in range(N):
         x,y = int(node_coordinates[n,0]),int(node_coordinates[n,1])
-        text = ax.text(y, x, int(grid_t[x, y]), ha="center", va="center", color="w")
+        text = ax.text(y, x, str(int(grid_t[x, y])), ha="center", va="center", color="w")
 
     ax.set_title("Frame: "+str(time_step+1)+'/'+str(TIMESTEPS))
     
