@@ -18,8 +18,8 @@ a1,a2 = ca.a(R,BETA,H,S_L)
 
 plt.suptitle(' Social impact I as a function of distance d to the leader')
 plt.title(f'R={R}, Beta={BETA}, H={H}')
-plt.ylabel('d')
-plt.xlabel('I')
+plt.xlabel('d')
+plt.ylabel('I')
 
 xmin,xmax = 0,20
 ymin,ymax = -600,0
