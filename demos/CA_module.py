@@ -3,7 +3,7 @@ Our own imeplemtation of the functions from the CA paper
 """
 
 import numpy as np
-
+from math import floor
 
 def start_grid(gridsize_x, gridsize_y, p):
     assert gridsize_x % 2 == 1 and gridsize_y % 2 == 1, 'Gridsize must be odd'
@@ -216,10 +216,7 @@ def a_stable(r,betta,h,s_l):
     # - beta no sqrt
     return 1/16*(2*np.pi*r - np.sqrt(np.pi) + betta - h)
 
-
-
-
-
+################################
 
 def minimun_leader_strength(r,beta,h):
     return (2*np.pi*r -np.sqrt(np.pi) -h )/beta
@@ -228,3 +225,48 @@ def maximun_leader_strength(r,beta,h):
     # TODO: Add with -beta, but one should be enough
     return (1/32)*(2*np.pi*r -np.sqrt(np.pi) + beta -h )**2
 
+################################
+
+
+def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates): 
+    # Find opinion of leader!
+    gridsize_x,gridsize_y = grid.shape
+    center_x = int((gridsize_x-1)/2)
+    center_y = int((gridsize_y-1)/2)
+
+    leader_opinion = grid[center_x, center_y]
+
+    # Get distance of nodes to leader from distance matrix!!!
+    leader_distance_matrix = distance_matrix[leader_node_index,:]
+    #print('Leader distance matrix:',leader_distance_matrix)
+    
+    # Cluster has radius r if all nodes at a smaller distance than r
+    # to the center have the same opinion as the leader
+    # Start with radius 0
+    c_radius = 0
+    max_c_radius = floor(gridsize_x/2) # TODO: Generalize to rectangle, this assumes square
+    consulted_nodes =np.array([])
+
+    while c_radius < max_c_radius:
+        # Find all nodes in distance_matrix closer that c_radius
+        nodes = np.where(leader_distance_matrix <= c_radius)
+        
+        #print('nodes',nodes[0])
+
+        for n in nodes[0]:
+            nx,ny = node_coordinates[n, 0],node_coordinates[n, 1]
+            if int(grid[int(nx),int(ny)]) != int(leader_opinion):
+                # If somebody has different opinion than leader, then we dont have cluster
+                #print('NOOO')
+                return c_radius
+        
+        # TODO: Remove consulted nodes
+        #consulted_nodes = np.append(consulted_nodes, nodes[0], axis=0)
+        #print(consulted_nodes)
+
+        c_radius += 1
+
+    # Turn radius to size
+    #c_size = np.pi*c_radius**2
+
+    return c_radius#,c_size

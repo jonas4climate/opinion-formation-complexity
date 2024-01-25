@@ -6,7 +6,7 @@ import numpy as np
 import CA_module as ca
 import matplotlib.pyplot as plt
 
-R = 20 #5/2
+R = 41/2 #5/2
 BETA = 1
 H = 0
 
