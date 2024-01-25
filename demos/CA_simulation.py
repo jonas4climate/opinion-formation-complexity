@@ -8,6 +8,7 @@ import CA_module as ca
 import numpy as np
 import cellpylib as cpl
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 ################################
 
@@ -64,6 +65,8 @@ for time_step in range(TIMESTEPS-1):
 #plt.title('Influences')
 #plt.show(block=False)
 
+# Colors look up table, so we will always map colors correctly
+
 
 fig, ax = plt.subplots()
 
@@ -75,7 +78,7 @@ for time_step in range(TIMESTEPS):
     # Create 2D plot
     # TODO: Normalize colormap based on values -> create LUT
 
-    im = ax.imshow(grid_t, cmap='seismic', interpolation='nearest')
+    im = ax.imshow(grid_t, cmap='seismic', interpolation='nearest',vmin=-1, vmax=1)
     #plt.colorbar()
 
     for n in range(N):
