@@ -12,21 +12,25 @@ from matplotlib.colors import ListedColormap
 
 ################################
 
-GRIDSIZE_X,GRIDSIZE_Y = 15,15
+GRIDSIZE_X,GRIDSIZE_Y = 25,25
 TIMESTEPS = 5
-TEMPERATURE = 100
-BETA_PEOPLE = 10
-BETA_LEADER = 1000
-H = 200
-p = 0.5  # Inital. likelihood of individual in social space
-s_L = 400   # Leader influence
+TEMPERATURE = 0
+BETA_PEOPLE = 4
+BETA_LEADER = 4
+H = 0
+p = 1  # Inital. likelihood of individual in social space
+s_L = 200   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
 ################################
 
 if TEMPERATURE == 0:
     expect_cluster = ca.analytical_expect_clusters(GRIDSIZE_X/2,BETA_PEOPLE,H,s_L)
+    a1,a2 = ca.a(GRIDSIZE_X/2,BETA_PEOPLE,H,s_L)
     print('Expect clusters?',expect_cluster)
+    print('Sizes:',str(round(a1,2)),str(round(a2,2)))
+
+################################
 
 grid = ca.start_grid(GRIDSIZE_X,GRIDSIZE_Y,p)
 
@@ -79,14 +83,15 @@ for time_step in range(TIMESTEPS):
     # TODO: Normalize colormap based on values -> create LUT
 
     im = ax.imshow(grid_t, cmap='seismic', interpolation='nearest',vmin=-1, vmax=1)
-    #plt.colorbar()
+    
 
     for n in range(N):
         x,y = int(node_coordinates[n,0]),int(node_coordinates[n,1])
         text = ax.text(y, x, int(grid_t[x, y]), ha="center", va="center", color="w")
 
-    ax.set_title("Frame: "+str(time_step+1)+'/'+str(TIMESTEPS))
-    
+    #ax.set_title("Frame: "+str(time_step+1)+'/'+str(TIMESTEPS))
+    ax.set_title(f'Frame:{(time_step+1)}/{TIMESTEPS},\nT={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={s_L}')
+
     fig.tight_layout()
     plt.show(block=False)
     

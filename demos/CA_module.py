@@ -96,7 +96,8 @@ def get_distance_matrix(node_coordinates):
 
 def q(mean):
     ## Probability distribution for the node influence
-    return np.random.uniform(0,2*mean)
+    # TODO: Make it a distribution, was simplified here
+    return 1 #np.random.uniform(0,2*mean)
 
 def get_node_influences(N,INFLUENCE_DISTRIBUTION_MEAN,leader_node_index,s_L):
     ## Influence (computed once!)
@@ -134,10 +135,11 @@ def update_opinion(grid,N,node_influences,node_coordinates,distance_matrix,leade
                 
                 sigma_j = grid[i_x,i_y]
                 s_j = node_influences[i]
-                d_ij = distance_matrix[i,j]
+                
                 
                 ### Compute the function of the distance
                 ### TODO: Make it a function
+                d_ij = distance_matrix[i,j]
                 g_d_ij = d_ij
                 
                 summation += (s_j * sigma_i * sigma_j)/(g_d_ij)
@@ -190,7 +192,24 @@ def a(r,betta,h,s_l):
 
     return a_1, a_2
 
+def a_positive(r,betta,h,s_l):
+    # + beta + sqrt (stable cluster)
+    return 1/16*(2*np.pi*r - np.sqrt(np.pi) + betta - h + np.sqrt((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32 * s_l))
+
+def a_negative(r,betta,h,s_l):
+    # + beta - sqrt (unstable solution)
+    return 1/16*(2*np.pi*r - np.sqrt(np.pi) + betta - h - np.sqrt((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32 * s_l))
+
+def a_stable(r,betta,h,s_l):
+    # - beta no sqrt
+    return 1/16*(2*np.pi*r - np.sqrt(np.pi) + betta - h)
+
+
+
 def minimun_leader_strength(r,beta,h):
     return (2*np.pi*r -np.sqrt(np.pi) -h )/beta
 
+def maximun_leader_strength(r,beta,h):
+    # TODO: Add with -beta, but one should be enough
+    return (1/32)*(2*np.pi*r -np.sqrt(np.pi) + beta -h )**2
 
