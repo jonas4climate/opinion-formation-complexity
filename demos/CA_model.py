@@ -264,19 +264,6 @@ def minimun_leader_strength(r,beta,h):
 #########
 
 # Set global parameters
-<<<<<<< HEAD
-GRIDSIZE_X,GRIDSIZE_Y = 9,9
-p = 1  # This value represents likelihood of adding an individual to an space in the grid during innitialization
-TIMESTEPS = 5
-NEIGHBOURHOOD = 'Moore'
-TEMPERATURE = 100
-DETERMINISTIC = False
-RADIUS_SOCIAL_SPACE = GRIDSIZE_X/2
-
-# Model parameters
-BETA = 10000
-EXTERNAL_INFLUENCE = 1
-=======
 GRIDSIZE_X,GRIDSIZE_Y = 73,73
 TIMESTEPS = 5
 TEMPERATURE = 20 # Stochasticity, 0 is deterministic
@@ -288,7 +275,6 @@ BETA = 0
 EXTERNAL_INFLUENCE = 0
 POPULATION_INFLUENCE_MEAN = 1
 LEADER_INFLUENCE = 10
->>>>>>> d5a8729609a31eb642a52f7c8dc4752573325c01
 
 assert GRIDSIZE_X % 2 != 0, f"Gridsize width should be odd {GRIDSIZE_X}"
 assert GRIDSIZE_Y % 2 != 0, f"Gridsize height should be odd {GRIDSIZE_X}"
@@ -313,22 +299,10 @@ opinion_grid_history[0,:,:] = starting_opinion_grid
 expecting_clusters = analytical_expect_clusters(RADIUS_SOCIAL_SPACE,BETA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
 print('Do we expect clusters with these parameters?', expecting_clusters)
 
-<<<<<<< HEAD
 if expecting_clusters:
     expected_cluster_size = a(RADIUS_SOCIAL_SPACE,BETA,EXTERNAL_INFLUENCE,LEADER_INFLUENCE)
     print('Expected size:', expected_cluster_size)
 
-
-
-# For loop of simulation
-for step in range(TIMESTEPS):
-    grid = get_next_step_grid(opinion_grid_history[step,:,:])
-    opinion_grid_history[step+1,:,:] = grid
-    print(grid)
-
-#cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', interval=250)
-
-=======
 # For loop of simulation
 for t in range(TIMESTEPS):
     print(t)
@@ -343,7 +317,6 @@ for t in range(TIMESTEPS):
 # cpl.plot2d(opinion_grid_history, timestep=5, title='timestep 5')
 
 cpl.plot2d_animate(opinion_grid_history, 'Opinion Grid history animation', show_grid=True, interval=500)
->>>>>>> d5a8729609a31eb642a52f7c8dc4752573325c01
 
 # Deterministic limit case
 
