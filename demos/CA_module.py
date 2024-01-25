@@ -4,6 +4,8 @@ Our own imeplemtation of the functions from the CA paper
 
 import numpy as np
 from math import floor
+from scipy.special import ellipeinc
+
 
 def start_grid(gridsize_x, gridsize_y, p):
     assert gridsize_x % 2 == 1 and gridsize_y % 2 == 1, 'Gridsize must be odd'
@@ -270,3 +272,15 @@ def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
     #c_size = np.pi*c_radius**2
 
     return c_radius#,c_size
+
+
+
+# do not know which a to use but use a1 first 
+# Inside and outside impact
+def Impact_in(s_l,a1,r,c_radius,beta):
+    
+    return -s_l/d - 8*a1*ellipeinc(c_radius/a1,np.pi/2) + 4*r*ellipeinc(c_radius/r,np.pi/2) + 2*np.sqrt(np.pi) + beta
+
+def Impact_out(s_l,a1,r,c_radius,beta):
+    
+    return s_l/d + 8*a1*ellipeinc(c_radius/a1,np.arcsin(a1/c_radius)) - 4*r*ellipeinc(c_radius/r,np.pi/2) + 2*np.sqrt(np.pi) + beta
