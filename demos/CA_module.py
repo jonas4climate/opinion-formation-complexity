@@ -142,8 +142,8 @@ def update_opinion(input_grid, N, node_influences, node_coordinates, distance_ma
                 j_x, j_y = int(node_coordinates[j, 0]), int(
                     node_coordinates[j, 1])
 
-                sigma_j = grid[i_x, i_y]
-                s_j = node_influences[i]
+                sigma_j = grid[j_x, j_y]
+                s_j = node_influences[j]
                 d_ij = distance_matrix[i, j]
 
                 # Compute the function of the distance
