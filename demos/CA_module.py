@@ -233,12 +233,10 @@ def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
     gridsize_x,gridsize_y = grid.shape
     center_x = int((gridsize_x-1)/2)
     center_y = int((gridsize_y-1)/2)
-
     leader_opinion = grid[center_x, center_y]
 
     # Get distance of nodes to leader from distance matrix!!!
     leader_distance_matrix = distance_matrix[leader_node_index,:]
-    #print('Leader distance matrix:',leader_distance_matrix)
     
     # Cluster has radius r if all nodes at a smaller distance than r
     # to the center have the same opinion as the leader
@@ -249,11 +247,18 @@ def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
 
     while c_radius < max_c_radius:
         # Find all nodes in distance_matrix closer that c_radius
-        nodes = np.where(leader_distance_matrix <= c_radius)
+        nodes = np.where(leader_distance_matrix <= c_radius)[0]
         
+        #print('Nodes',nodes,consulted_nodes.astype(int))
+        #nodes = np.where(nodes != consulted_nodes)[0]
+
+#        print(np.where(nodes != consulted_nodes))
+        # Remove consulted nodes from nodes
+        #if c_radius>0:
+        #    nodes = np.delete(nodes, consulted_nodes.astype(int))
         #print('nodes',nodes[0])
 
-        for n in nodes[0]:
+        for n in nodes:
             nx,ny = node_coordinates[n, 0],node_coordinates[n, 1]
             if int(grid[int(nx),int(ny)]) != int(leader_opinion):
                 # If somebody has different opinion than leader, then we dont have cluster
@@ -261,7 +266,7 @@ def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
                 return c_radius
         
         # TODO: Remove consulted nodes
-        #consulted_nodes = np.append(consulted_nodes, nodes[0], axis=0)
+        #consulted_nodes = np.append(consulted_nodes, nodes, axis=0)
         #print(consulted_nodes)
 
         c_radius += 1

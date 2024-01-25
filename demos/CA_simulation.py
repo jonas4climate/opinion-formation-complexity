@@ -47,15 +47,15 @@ node_influences = ca.get_node_influences(
 simulation = np.ndarray((TIMESTEPS, GRIDSIZE_X, GRIDSIZE_Y))
 cluster_sizes = np.zeros(TIMESTEPS)
 
+################################
+
+
 # First step
 simulation[0, :, :] = grid
 cluster_sizes[0] = ca.cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
 
+################################
 
-#print('First simulation cluster size')
-#print('Cluster size:',cluster_size)
-
-#print(1/0)
 
 # Next steps
 for time_step in range(TIMESTEPS-1):
