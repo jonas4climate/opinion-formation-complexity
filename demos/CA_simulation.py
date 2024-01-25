@@ -20,8 +20,12 @@ BETA_PEOPLE = 1
 BETA_LEADER = 1
 H = 0
 p = 1
+p_1 = 0.1
+
 INFLUENCE_LEADER = 160   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
+
+
 
 ################################
 
@@ -30,7 +34,7 @@ if TEMPERATURE == 0:
         GRIDSIZE_X/2, BETA_PEOPLE, H, INFLUENCE_LEADER)
     print('Expect clusters?', expect_cluster)
 
-grid = ca.start_grid(GRIDSIZE_X, GRIDSIZE_Y, p)
+grid = ca.start_grid(GRIDSIZE_X, GRIDSIZE_Y, p,p_1)
 
 N = ca.get_number_of_nodes_in_grid(grid)
 node_coordinates = ca.get_node_coordinates(grid)
@@ -111,9 +115,10 @@ for time_step in range(TIMESTEPS):
     #        y, x, str(int(grid_t[x, y])), ha="center", va="center", color="w",fontsize=4)
     ax.set_title(f'Frame:{(time_step+1)}/{TIMESTEPS},\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={INFLUENCE_LEADER},c_radius={int(cluster_size)}')
     
+    
     plt.tight_layout()
     plt.show(block=False)
-    plt.pause(0.1)
+    plt.pause(0.4)
     ax.clear()
 
     # plt.close()
@@ -181,11 +186,11 @@ for time_step in range(TIMESTEPS):
     # Current cluster !!!!!
     ax.scatter(INFLUENCE_LEADER,cluster_size)
     
+    
     plt.grid()
-
-    plt.show(block=False)
     plt.tight_layout()
     plt.pause(0.4)
+    plt.show(block=False)
     ax.clear()
 
 

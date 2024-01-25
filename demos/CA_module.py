@@ -7,27 +7,31 @@ from math import floor
 from scipy.special import ellipeinc
 
 
-def start_grid(gridsize_x, gridsize_y, p):
+def start_grid(gridsize_x, gridsize_y, p,p_1):
     assert gridsize_x % 2 == 1 and gridsize_y % 2 == 1, 'Gridsize must be odd'
 
     grid = np.zeros((gridsize_x, gridsize_y))
-
-    # Add people with opinion -1
-    # TODO: Update so they can also have opinion 1
-    p_grid = np.random.rand(gridsize_x, gridsize_y)
-    grid[p_grid < p] = -1
-
-    # Add leader in center with opinion 1
+    
     center_x = int((gridsize_x-1)/2)
     center_y = int((gridsize_y-1)/2)
-    grid[center_x, center_y] = 1
 
-    # Exclude individuals outside the circle
+    # Assign nonzero values to individuals outside the grid    
     R = gridsize_x/2
     for x_idx in range(gridsize_x):
         for y_idx in range(gridsize_y):
-            if d(x_idx, y_idx, center_x, center_y) > R:
-                grid[x_idx, y_idx] = 0
+            # Only individuals inside the circle are considered
+            if d(x_idx, y_idx, center_x, center_y) <= R:
+                # Assign a value with prob p
+                random_number = np.random.rand(1)
+                if random_number < p:
+                    # Get -1 or 1 with p1
+                    random_number = np.random.rand(1)
+                    grid[x_idx, y_idx] = 1 if random_number < p_1 else -1
+    
+    # Add leader in center with opinion 1
+
+    grid[center_x, center_y] = 1
+    
     return grid
 
 
