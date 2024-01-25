@@ -62,3 +62,7 @@ def diagram(R,BETA,H):
 
 
     return fig, ax
+
+def update_basics_diagram(fig,ax):
+
+    return fig,ax
