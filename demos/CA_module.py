@@ -283,13 +283,25 @@ def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
     return c_radius#,c_size
 
 
-
 # do not know which a to use but use a1 first 
 # Inside and outside impact
-def Impact_in(s_l,a1,r,c_radius,beta):
+def Impact_in(s_l,a,r,distance_to_leader,beta):
     
-    return -s_l/d - 8*a1*ellipeinc(c_radius/a1,np.pi/2) + 4*r*ellipeinc(c_radius/r,np.pi/2) + 2*np.sqrt(np.pi) + beta
+    term1 = - s_l / distance_to_leader
+    term2 = - 8 * a * ellipeinc(np.pi / 2, (distance_to_leader / a)**2)
+    term3 = 4 * r * ellipeinc(np.pi / 2, (distance_to_leader / r)**2)
+    term4 = 2 * np.sqrt(np.pi)
+    
+    result = term1 + term2 + term3 + term4 - beta
+   
+    return result
 
-def Impact_out(s_l,a1,r,c_radius,beta):
-    
-    return s_l/d + 8*a1*ellipeinc(c_radius/a1,np.arcsin(a1/c_radius)) - 4*r*ellipeinc(c_radius/r,np.pi/2) + 2*np.sqrt(np.pi) + beta
+def Impact_out(s_l, a, r, distance_to_leader, beta):
+    term1 = s_l / distance_to_leader
+    term2 = 8 * a * ellipeinc(np.arcsin(a / distance_to_leader), (a / distance_to_leader)**2)
+    term3 = -4 * r * ellipeinc(np.pi / 2, (distance_to_leader / r)**2)
+    term4 = 2 * np.sqrt(np.pi)    
+
+    result = term1 + term2 + term3 + term4 - beta
+   
+    return result
