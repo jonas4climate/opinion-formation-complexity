@@ -13,15 +13,19 @@ import matplotlib.pyplot as plt
 
 GRIDSIZE_X,GRIDSIZE_Y = 15,15
 TIMESTEPS = 5
-TEMPERATURE = 0
+TEMPERATURE = 100
 BETA_PEOPLE = 10
 BETA_LEADER = 1000
-H = 20
-p = 1  # Inital. likelihood of individual in social space
-s_L = 40000   # Leader influence
+H = 200
+p = 0.5  # Inital. likelihood of individual in social space
+s_L = 400   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
 ################################
+
+if TEMPERATURE == 0:
+    expect_cluster = ca.analytical_expect_clusters(GRIDSIZE_X/2,BETA_PEOPLE,H,s_L)
+    print('Expect clusters?',expect_cluster)
 
 grid = ca.start_grid(GRIDSIZE_X,GRIDSIZE_Y,p)
 
@@ -49,17 +53,19 @@ for time_step in range(TIMESTEPS-1):
 ################################
 
 # Plot
-
 #cpl.plot2d_animate(simulation,interval=250)
 
-# Custom plotting
-EMPTY_COLOR = (0,0,0)
-OPINION_COLOR_1 = (255,0,0)
-OPINION_COLOR_2 = (0,0,255)
+
+
+# Plot influence grid
+# TODO: Make grid out of node_influences
+#plt.imshow(node_influences, cmap='seismic', interpolation='nearest')
+#plt.colorbar()
+#plt.title('Influences')
+#plt.show(block=False)
 
 
 fig, ax = plt.subplots()
-
 
 for time_step in range(TIMESTEPS):
     
@@ -67,6 +73,8 @@ for time_step in range(TIMESTEPS):
     grid_t = simulation[time_step,:,:]
 
     # Create 2D plot
+    # TODO: Normalize colormap based on values -> create LUT
+
     im = ax.imshow(grid_t, cmap='seismic', interpolation='nearest')
     #plt.colorbar()
 

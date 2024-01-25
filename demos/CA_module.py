@@ -87,6 +87,11 @@ def get_distance_matrix(node_coordinates):
             
             # Update the distance
             distance_matrix[n_i,n_j] = d(x0,y0,x1,y1)
+    
+    # Extra, set closest neighboor distance to 1
+    # And other distances to quadratic
+    # Iterate rows   
+    
     return distance_matrix
 
 def q(mean):
@@ -150,7 +155,7 @@ def update_opinion(grid,N,node_influences,node_coordinates,distance_matrix,leade
             sigma_i = -np.sign(I_i * sigma_i)
         else:
             # Compute probability of change and update if neccesary
-            probability_staying = (np.exp(-I_i * TEMPERATURE))/(np.exp(-I_i * TEMPERATURE) + np.exp(I_i * TEMPERATURE))
+            probability_staying = (np.exp(-I_i / TEMPERATURE))/(np.exp(-I_i / TEMPERATURE) + np.exp(I_i / TEMPERATURE))
             opinion_change = bool(np.random.rand(1) > probability_staying)
             
             if opinion_change:
@@ -165,4 +170,27 @@ def update_opinion(grid,N,node_influences,node_coordinates,distance_matrix,leade
 
 
 ################################
+
+def analytical_expect_clusters(r,beta,h,s_l):
+    # Ensure both solutions are > 0
+
+    print('First half (2*pi*R-sqrt(pi)+beta-h)^2:',(2*np.pi*r - np.sqrt(np.pi) + beta - h)**2)
+    print('Second half (32*s_l):',32*s_l)
+
+    condition_1 = bool((2*np.pi*r - np.sqrt(np.pi) + beta - h)**2 - 32*s_l >= 0)
+    condition_2 = bool((2*np.pi*r - np.sqrt(np.pi) - beta - h)**2 - 32*s_l >= 0)
+    return condition_1 and condition_2
+
+def a(r,betta,h,s_l):
+    """
+    Calculate the cluster size in determistic model case assuming g(r) = r and mean s = 1
+    """
+    a_1 = 1/16*(2*np.pi*r - np.sqrt(np.pi) + betta - h + np.sqrt((2*np.pi*r - np.sqrt(np.pi) + betta - h)**2 - 32 * s_l))
+    a_2 = 1/16*(2*np.pi*r - np.sqrt(np.pi) - betta - h - np.sqrt((2*np.pi*r - np.sqrt(np.pi) - betta - h)**2 - 32 * s_l))
+
+    return a_1, a_2
+
+def minimun_leader_strength(r,beta,h):
+    return (2*np.pi*r -np.sqrt(np.pi) -h )/beta
+
 
