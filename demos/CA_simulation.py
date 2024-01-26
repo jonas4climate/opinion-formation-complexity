@@ -4,12 +4,8 @@
 """
 
 import CA_module as ca
-import CA_plot_module as cap
-
 import numpy as np
-import cellpylib as cpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 
 ################################
 
@@ -20,7 +16,7 @@ BETA_PEOPLE = 1
 BETA_LEADER = 1
 H = 0
 p = 1
-p_1 = 0.1
+p_1 = 0
 
 INFLUENCE_LEADER = 160   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
@@ -34,46 +30,10 @@ if TEMPERATURE == 0:
         GRIDSIZE_X/2, BETA_PEOPLE, H, INFLUENCE_LEADER)
     print('Expect clusters?', expect_cluster)
 
-grid = ca.start_grid(GRIDSIZE_X, GRIDSIZE_Y, p,p_1)
-
-N = ca.get_number_of_nodes_in_grid(grid)
-node_coordinates = ca.get_node_coordinates(grid)
-distance_matrix = ca.get_distance_matrix(node_coordinates)
-
-
-leader_node_index = ca.get_leader_node_index(
-    node_coordinates, GRIDSIZE_X, GRIDSIZE_Y)
-beta = ca.get_beta_matrix(N, BETA_PEOPLE, BETA_LEADER, leader_node_index)
-node_influences = ca.get_node_influences(
-    N, INFLUENCE_DISTRIBUTION_MEAN, leader_node_index, INFLUENCE_LEADER)
-
-################################
-
-simulation = np.ndarray((TIMESTEPS, GRIDSIZE_X, GRIDSIZE_Y))
-cluster_sizes = np.zeros(TIMESTEPS)
-
-################################
-
-
-# First step
-simulation[0, :, :] = grid
-cluster_sizes[0] = ca.cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
-
-################################
-
-
-# Next steps
-for time_step in range(TIMESTEPS-1):
-
-    print('Sim step:',time_step)
-
-    grid = ca.update_opinion(grid, N, node_influences, node_coordinates, distance_matrix,
-                             leader_node_index, BETA_LEADER, BETA_PEOPLE, TEMPERATURE, H)
-
-    # TODO: Compute size of cluster around center for all time steps
-    cluster_size = ca.cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
-    cluster_sizes[time_step+1] = cluster_size
-    simulation[time_step+1, :, :] = grid
+model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+data = model.evolve(TIMESTEPS)
+simulation = data['opinions']
+cluster_sizes = data['cluster_sizes']
 
 
 
@@ -128,7 +88,7 @@ plt.show(block=True)
 
 
 # Phase animation
-fig, ax = cap.diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
+fig, ax = ca.plot_diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
 
 R = GRIDSIZE_X/2
 S_L_min = ca.minimun_leader_strength(R,BETA_PEOPLE,H)

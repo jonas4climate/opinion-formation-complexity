@@ -29,12 +29,12 @@ plt.ylim([ymin,ymax])
 
 # d > a
 x1 = np.linspace(a2, R, 100)
-y1 = ca.Impact_out(S_L,a2,R,x1,BETA)
+y1 = ca.impact_out(S_L,a2,R,x1,BETA)
 plt.plot(x1,y1,c='black',linestyle='--')
 
 # d < a
 x2 = np.linspace(0, a2, 100)
-y2 = ca.Impact_in(S_L,a2,R,x2,BETA)
+y2 = ca.impact_in(S_L,a2,R,x2,BETA)
 plt.plot(x2,y2,c='black',linestyle='--')
 
 plt.grid()
