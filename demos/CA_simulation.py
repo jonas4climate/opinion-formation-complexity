@@ -32,10 +32,12 @@ if TEMPERATURE == 0:
     print('Expect clusters?', expect_cluster)
 
 model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+data = model.evolve(5)
+
+model.reset()
 data = model.evolve(TIMESTEPS)
 simulation = data['opinions']
 cluster_sizes = data['cluster_sizes']
-
 
 
 ################################

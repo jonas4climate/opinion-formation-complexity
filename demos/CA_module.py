@@ -9,14 +9,18 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import cellpylib as cpl
 from tqdm import tqdm
+import logging
+from logging import warning, error, info, debug
+
+logging.basicConfig(level=logging.INFO)
 
 class CA(object):
 
     def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_node_exists, p_opinion_1, influence_leader, influence_people_mean, distance_func, influence_prob_dist_func):
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.temp = temperature
-        self.beta_people = beta_people
-        self.beta_leader = beta_leader
+        self.beta = beta_people
+        self.beta_l = beta_leader
         self.h = h
         self.p = p_node_exists
         self.p_1 = p_opinion_1
@@ -24,17 +28,18 @@ class CA(object):
         self.s_mean = influence_people_mean
         self.q = influence_prob_dist_func
         self.d = distance_func
-        self.opinion_grid = self.__gen_initial_opinion_grid()
+        self.__starting_grid = self.__gen_initial_opinion_grid()
+        self.opinion_grid = self.__starting_grid.copy()
         self.N = self.__gen_number_of_nonempty_nodes_in_grid()
-        self.node_coords = self.__gen_array_node_coord_tuples()
-        self.leader_node_coord_idx = self.__gen_leader_coord_index()
-        self.distance_matrix = self.__gen_distance_matrix()
-        self.beta_matrix = self.__gen_beta_matrix(beta_people, beta_leader)
-        self.node_influences = self.__gen_node_influences(influence_leader)
+        self.__node_coords = self.__gen_array_node_coord_tuples()
+        self.__leader_node_coord_idx = self.__gen_leader_coord_index()
+        self.__distance_matrix = self.__gen_distance_matrix()
+        self.__beta_matrix = self.__gen_beta_matrix(beta_people, beta_leader)
+        self.__node_influences = self.__gen_node_influences(influence_leader)
 
 
     def __gen_initial_opinion_grid(self):
-        assert self.gridsize_x % 2 == 1 and self.gridsize_y % 2 == 1, 'Gridsize must be odd'
+        assert self.gridsize_x % 2 == 1 and self.gridsize_y % 2 == 1, 'Gridsize must be odd for central leader placement'
 
         grid = np.zeros((self.gridsize_x, self.gridsize_y))
         
@@ -86,7 +91,7 @@ class CA(object):
         N = self.N
 
         for n in range(N):
-            if self.node_coords[n, 0] == center_x and self.node_coords[n, 1] == center_y:
+            if self.__node_coords[n, 0] == center_x and self.__node_coords[n, 1] == center_y:
                 return n
             
         raise ValueError('Leader not found!')
@@ -94,7 +99,7 @@ class CA(object):
 
     def __gen_beta_matrix(self, beta_people, beta_leader):
         beta_matrix = np.full(self.N, beta_people)
-        beta_matrix[self.leader_node_coord_idx] = beta_leader
+        beta_matrix[self.__leader_node_coord_idx] = beta_leader
         return beta_matrix
     
 
@@ -103,7 +108,7 @@ class CA(object):
         # It is a 3D matrix of size GRIDSIZE_X,GRIDSIZE_,N
         # Each submatrix is the distance grid from each node
         # TODO (Secondary): Optimize this knowing the distance matrix is symetric
-        node_coords = self.node_coords
+        node_coords = self.__node_coords
         N = node_coords.shape[0]
         distance_matrix = np.zeros((N, N))
 
@@ -131,7 +136,7 @@ class CA(object):
         node_influences = np.zeros(self.N)
 
         for i in range(self.N):
-            if i == self.leader_node_coord_idx:
+            if i == self.__leader_node_coord_idx:
                 node_influences[i] = s_L
             else:
                 node_influences[i] = self.q(self.s_mean)
@@ -146,7 +151,7 @@ class CA(object):
         leader_opinion = self.opinion_grid[center_x, center_y]
 
         # Get distance of nodes to leader from distance matrix!!!
-        leader_distance_matrix = self.distance_matrix[self.leader_node_coord_idx,:]
+        leader_distance_matrix = self.__distance_matrix[self.__leader_node_coord_idx,:]
         
         # Cluster has radius r if all nodes at a smaller distance than r
         # to the center have the same opinion as the leader
@@ -169,7 +174,7 @@ class CA(object):
             #print('nodes',nodes[0])
 
             for n in nodes:
-                nx,ny = self.node_coords[n, 0],self.node_coords[n, 1]
+                nx,ny = self.__node_coords[n, 0],self.__node_coords[n, 1]
                 if int(self.opinion_grid[int(nx),int(ny)]) != int(leader_opinion):
                     # If somebody has different opinion than leader, then we dont have cluster
                     #print('NOOO')
@@ -195,10 +200,10 @@ class CA(object):
             # First compute impact
             # Retrieve node opinion from grid
             # and node influence from matrix
-            i_x, i_y = int(self.node_coords[i, 0]), int(self.node_coords[i, 1])
+            i_x, i_y = int(self.__node_coords[i, 0]), int(self.__node_coords[i, 1])
 
             sigma_i = grid[i_x, i_y]
-            s_i = self.node_influences[i]
+            s_i = self.__node_influences[i]
 
             # Compute sum by looping over other nodes
             summation = 0
@@ -206,12 +211,12 @@ class CA(object):
                 if j != i:
                     # Retrieve their opinion and influence and distance
                     # And add the term
-                    j_x, j_y = int(self.node_coords[j, 0]), int(
-                        self.node_coords[j, 1])
+                    j_x, j_y = int(self.__node_coords[j, 0]), int(
+                        self.__node_coords[j, 1])
 
                     sigma_j = grid[j_x, j_y]
-                    s_j = self.node_influences[j]
-                    d_ij = self.distance_matrix[i, j]
+                    s_j = self.__node_influences[j]
+                    d_ij = self.__distance_matrix[i, j]
 
                     # Compute the function of the distance
                     # TODO: Make it a function
@@ -220,10 +225,7 @@ class CA(object):
                     summation += (s_j * sigma_i * sigma_j)/(g_d_ij)
 
             # Combine to get social impact
-            if i == self.leader_node_coord_idx:
-                I_i = -s_i*self.beta_leader - sigma_i*self.h - summation #TODO: use beta matrix instead
-            else:
-                I_i = -s_i*self.beta_people - sigma_i*self.h - summation #TODO: use beta matrix instead
+            I_i = -s_i*self.__beta_matrix[i] - sigma_i*self.h - summation
 
             # Update opinion
             if self.temp == 0:
@@ -260,6 +262,14 @@ class CA(object):
 
         data = {'opinions': opinion_grid_history, 'cluster_sizes': cluster_sizes}
         return data
+    
+    def reset(self):
+        if np.all(self.__starting_grid == self.opinion_grid):
+            warning('Grid hasn\'t changed since initialization, no need to reset.')
+            return
+        
+        self.opinion_grid = self.__starting_grid.copy()
+        return
 
 # do not know which a to use but use a1 first 
 # Inside and outside impact
