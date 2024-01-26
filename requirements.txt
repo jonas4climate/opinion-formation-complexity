@@ -5,3 +5,5 @@ networkx
 matplotlib
 seaborn
 cellpylib
+tqdm
+numba
