@@ -4,7 +4,7 @@ import numpy as np
 import os.path as path
 import logging
 from logging import warning, error, info, debug
-from CA_module import q
+from CA_module import prob_dist_influence_people as q
 
 #Importing real network data
 
