@@ -15,7 +15,7 @@ above which we can overcome the leader infuence
 
 import numpy as np
 import CA_module as ca
-import CA_plot_module as cap
+#import CA_plot_module as cap
 import matplotlib.pyplot as plt
 
 ################################
@@ -77,7 +77,7 @@ plt.show()
 
 # Plot diagram to ensure we are within parabola!
 
-fig, ax = cap.diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
+fig, ax = ca.diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
 
 R = GRIDSIZE_X/2
 S_L_min = ca.minimun_leader_strength(R,BETA_PEOPLE,H)

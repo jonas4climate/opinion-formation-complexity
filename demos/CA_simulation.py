@@ -9,18 +9,15 @@ import matplotlib.pyplot as plt
 
 ################################
 
-GRIDSIZE_X,GRIDSIZE_Y = 15,15
-TIMESTEPS = 6
+GRIDSIZE_X,GRIDSIZE_Y = 41,41
+TIMESTEPS = 20
 TEMPERATURE = 40
 BETA_PEOPLE = 1
 BETA_LEADER = 1
 H = 0
 p = 1
 p_1 = 0
-<<<<<<< HEAD
 a_0 = 1 # Size of innitial cluster around leader
-=======
->>>>>>> ee0788b5e495f57d04d03979bf7c6481a3fcf523
 
 INFLUENCE_LEADER = 50   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1

@@ -49,14 +49,6 @@ class CA(object):
                 if self.d(x_idx, y_idx, center_x, center_y) <= R:
                     # Assign a value with prob p
                     random_number = np.random.rand(1)
-<<<<<<< HEAD
-                    grid[x_idx, y_idx] = 1 if random_number < p_1 else -1
-    
-    # Add leader in center with opinion 1
-    grid[center_x, center_y] = 1
- 
-    return grid
-=======
                     if random_number < self.p:
                         # Get -1 or 1 with p1
                         random_number = np.random.rand(1)
@@ -66,7 +58,6 @@ class CA(object):
         grid[center_x, center_y] = 1
 
         return grid
->>>>>>> ee0788b5e495f57d04d03979bf7c6481a3fcf523
 
 
     def __gen_number_of_nonempty_nodes_in_grid(self):
@@ -160,7 +151,7 @@ class CA(object):
         # Cluster has radius r if all nodes at a smaller distance than r
         # to the center have the same opinion as the leader
         # Start with radius 0
-        c_radius = 0
+        c_radius = 0.5
         max_c_radius = floor(gridsize_x/2) # TODO: Generalize to rectangle, this assumes square
         consulted_nodes =np.array([])
 
@@ -405,86 +396,4 @@ def minimun_leader_strength(r,beta,h):
 
 def maximun_leader_strength(r,beta,h):
     # TODO: Add with -beta, but one should be enough
-<<<<<<< HEAD
     return (1/32)*(2*np.pi*r -np.sqrt(np.pi) + beta -h )**2
-
-################################
-
-
-def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates): 
-    # Find opinion of leader!
-    gridsize_x,gridsize_y = grid.shape
-    center_x = int((gridsize_x-1)/2)
-    center_y = int((gridsize_y-1)/2)
-    leader_opinion = grid[center_x, center_y]
-
-    # Get distance of nodes to leader from distance matrix!!!
-    leader_distance_matrix = distance_matrix[leader_node_index,:]
-    
-    # Cluster has radius r if all nodes at a smaller distance than r
-    # to the center have the same opinion as the leader
-    # Start with radius 0
-    c_radius = 0
-    max_c_radius = floor(gridsize_x/2) # TODO: Generalize to rectangle, this assumes square
-    consulted_nodes =np.array([])
-
-    while c_radius < max_c_radius:
-        # Find all nodes in distance_matrix closer that c_radius
-        nodes = np.where(leader_distance_matrix <= c_radius)[0]
-        
-        #print('Nodes',nodes,consulted_nodes.astype(int))
-        #nodes = np.where(nodes != consulted_nodes)[0]
-
-#        print(np.where(nodes != consulted_nodes))
-        # Remove consulted nodes from nodes
-        #if c_radius>0:
-        #    nodes = np.delete(nodes, consulted_nodes.astype(int))
-        #print('nodes',nodes[0])
-
-        for n in nodes:
-            nx,ny = node_coordinates[n, 0],node_coordinates[n, 1]
-            # TODO: IT IS COMPARED AGAINST 1, WHICH WAS THE LEADERS STARTING OPINION
-            # NOT AGAINST CURRENT LEADER OPINION int(leader_opinion)
-            # THIS WAY WE CAN COUNT CLUSTER OF SIZE 0 IF LEADER DIES
-            if int(grid[int(nx),int(ny)]) != 1:
-                # If somebody has different opinion than leader, then we dont have cluster
-                #print('NOOO')
-                return c_radius
-        
-        # TODO: Remove consulted nodes
-        #consulted_nodes = np.append(consulted_nodes, nodes, axis=0)
-        #print(consulted_nodes)
-
-        c_radius += 1
-
-    # Turn radius to size
-    #c_size = np.pi*c_radius**2
-
-    return c_radius#,c_size
-
-
-# do not know which a to use but use a1 first 
-# Inside and outside impact
-def Impact_in(s_l,a,r,distance_to_leader,beta):
-    
-    term1 = - s_l / distance_to_leader
-    term2 = - 8 * a * ellipeinc(np.pi / 2, (distance_to_leader / a)**2)
-    term3 = 4 * r * ellipeinc(np.pi / 2, (distance_to_leader / r)**2)
-    term4 = 2 * np.sqrt(np.pi)
-    
-    result = term1 + term2 + term3 + term4 - beta
-   
-    return result
-
-def Impact_out(s_l, a, r, distance_to_leader, beta):
-    term1 = s_l / distance_to_leader
-    term2 = 8 * a * ellipeinc(np.arcsin(a / distance_to_leader), (a / distance_to_leader)**2)
-    term3 = -4 * r * ellipeinc(np.pi / 2, (distance_to_leader / r)**2)
-    term4 = 2 * np.sqrt(np.pi)    
-
-    result = term1 + term2 + term3 + term4 - beta
-   
-    return result
-=======
-    return (1/32)*(2*np.pi*r -np.sqrt(np.pi) + beta -h )**2
->>>>>>> ee0788b5e495f57d04d03979bf7c6481a3fcf523
