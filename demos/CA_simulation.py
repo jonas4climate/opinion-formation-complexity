@@ -13,16 +13,17 @@ from matplotlib.colors import ListedColormap
 
 ################################
 
-GRIDSIZE_X,GRIDSIZE_Y = 25,25
-TIMESTEPS = 10
-TEMPERATURE = 0
+GRIDSIZE_X,GRIDSIZE_Y = 15,15
+TIMESTEPS = 6
+TEMPERATURE = 40
 BETA_PEOPLE = 1
 BETA_LEADER = 1
 H = 0
 p = 1
-p_1 = 0.1
+p_1 = 0
+a_0 = 1 # Size of innitial cluster around leader
 
-INFLUENCE_LEADER = 160   # Leader influence
+INFLUENCE_LEADER = 50   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
 
@@ -118,14 +119,13 @@ for time_step in range(TIMESTEPS):
     
     plt.tight_layout()
     plt.show(block=False)
-    plt.pause(0.4)
+    plt.pause(0.2)
     ax.clear()
 
     # plt.close()
 
 # Keep last frame until manually closing it
 plt.show(block=True)
-
 
 # Phase animation
 fig, ax = cap.diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
@@ -180,16 +180,17 @@ for time_step in range(TIMESTEPS):
 
     # Current leader influence!!!
     
-    ax.vlines(x=INFLUENCE_LEADER, ymin=0, ymax=ymax, colors='cyan', ls='dashed', lw=1)
+    ax.vlines(x=INFLUENCE_LEADER, ymin=0, ymax=ymax, colors='gray', ls='dashed', lw=1)
 
 
     # Current cluster !!!!!
+    cluster_size = cluster_sizes[time_step]
     ax.scatter(INFLUENCE_LEADER,cluster_size)
     
     
     plt.grid()
     plt.tight_layout()
-    plt.pause(0.4)
+    plt.pause(0.2)
     plt.show(block=False)
     ax.clear()
 

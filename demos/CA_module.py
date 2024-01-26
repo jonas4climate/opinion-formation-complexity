@@ -29,9 +29,8 @@ def start_grid(gridsize_x, gridsize_y, p,p_1):
                     grid[x_idx, y_idx] = 1 if random_number < p_1 else -1
     
     # Add leader in center with opinion 1
-
     grid[center_x, center_y] = 1
-    
+ 
     return grid
 
 
@@ -266,7 +265,10 @@ def cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
 
         for n in nodes:
             nx,ny = node_coordinates[n, 0],node_coordinates[n, 1]
-            if int(grid[int(nx),int(ny)]) != int(leader_opinion):
+            # TODO: IT IS COMPARED AGAINST 1, WHICH WAS THE LEADERS STARTING OPINION
+            # NOT AGAINST CURRENT LEADER OPINION int(leader_opinion)
+            # THIS WAY WE CAN COUNT CLUSTER OF SIZE 0 IF LEADER DIES
+            if int(grid[int(nx),int(ny)]) != 1:
                 # If somebody has different opinion than leader, then we dont have cluster
                 #print('NOOO')
                 return c_radius
