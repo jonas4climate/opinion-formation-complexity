@@ -16,11 +16,11 @@ import matplotlib.pyplot as plt
 ################################
 
 NUMBER_OF_T_VALUES_TO_TEST = 20
-SIMS_PER_T_VALUE = 10
-T_MAX = 100
+SIMS_PER_T_VALUE = 20
+T_MAX = 200
 
-THRESHOLD = 3 # Maximun leader cluster radius that is not considered opinion overcomming
-
+THRESHOLD = 5 # Maximun leader cluster radius that is not considered opinion overcomming
+INFLUENCE_LEADER = 100             # May need to tweak this to ensure we are on cluster region!
 ################################
 
 # Todo this we first get parameters that for T=0
@@ -28,8 +28,8 @@ THRESHOLD = 3 # Maximun leader cluster radius that is not considered opinion ove
 
 ################################
 
-GRIDSIZE_X,GRIDSIZE_Y = 15,15
-TIMESTEPS = 5
+GRIDSIZE_X,GRIDSIZE_Y = 21,21
+TIMESTEPS = 10
 #TEMPERATURE = 0
 BETA_PEOPLE = 1
 BETA_LEADER = 1
@@ -37,7 +37,7 @@ H = 0
 p = 1
 p_1 = 1 # In this scenario everybody believes the leader at start
 a_0 = 1
-INFLUENCE_LEADER = 50             # May need to tweak this!
+
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
 ################################
@@ -130,9 +130,12 @@ plt.plot(temperatures,p_overcoming_leader)
 plt.xlim([0,T_MAX])
 plt.ylim([0,1])
 
-plt.title('Effect of temperature on overcoming leader consensus')
+plt.suptitle('Effect of temperature on overcoming leader consensus')
+plt.title(f'R={R}, {SIMS_PER_T_VALUE} runs/T, T_MAX={T_MAX},THRESHOLD={THRESHOLD}')
 plt.xlabel('Temperature')
 plt.ylabel('p(Overcoming leader)')
 
+plt.grid()
+plt.tight_layout()
 
 plt.show()
