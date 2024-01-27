@@ -15,7 +15,6 @@ above which we can overcome the leader infuence
 
 import numpy as np
 import CA_module as ca
-#import CA_plot_module as cap
 import matplotlib.pyplot as plt
 
 ################################
@@ -40,44 +39,22 @@ if TEMPERATURE == 0:
         GRIDSIZE_X/2, BETA_PEOPLE, H, INFLUENCE_LEADER)
     print('Expect clusters?', expect_cluster)
 
-grid = ca.start_grid(GRIDSIZE_X, GRIDSIZE_Y, p,p_1)
-
-N = ca.get_number_of_nodes_in_grid(grid)
-node_coordinates = ca.get_node_coordinates(grid)
-distance_matrix = ca.get_distance_matrix(node_coordinates)
-
-
-leader_node_index = ca.get_leader_node_index(
-    node_coordinates, GRIDSIZE_X, GRIDSIZE_Y)
-beta = ca.get_beta_matrix(N, BETA_PEOPLE, BETA_LEADER, leader_node_index)
-node_influences = ca.get_node_influences(
-    N, INFLUENCE_DISTRIBUTION_MEAN, leader_node_index, INFLUENCE_LEADER)
-
-################################
-
-simulation = np.ndarray((TIMESTEPS, GRIDSIZE_X, GRIDSIZE_Y))
-cluster_sizes = np.zeros(TIMESTEPS)
-
-# First step
-simulation[0, :, :] = grid
-cluster_sizes[0] = ca.cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
-
-
-################################
-# Show starting state
-################################
+model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+data = model.evolve(TIMESTEPS)
+simulation = data['opinions']
+cluster_sizes = data['cluster_sizes']
 
 
 # Plot it
 plt.figure()
-plt.imshow(grid, cmap='seismic',interpolation='nearest', vmin=-1, vmax=1)
+plt.imshow(model.starting_grid, cmap='seismic',interpolation='nearest', vmin=-1, vmax=1)
 plt.title(f'Start,\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={INFLUENCE_LEADER},c_radius={int(cluster_sizes[0])}')
 plt.tight_layout()
 plt.show()
 
 # Plot diagram to ensure we are within parabola!
 
-fig, ax = ca.diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
+fig, ax = ca.plot_diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
 
 R = GRIDSIZE_X/2
 S_L_min = ca.minimun_leader_strength(R,BETA_PEOPLE,H)
@@ -190,40 +167,10 @@ for T in range(NUMBER_OF_TEMPERATURE_VALUES_TO_TEST):
     # Do many simulations with that T to get av. cluster size
     for sim in range(NUMBER_OF_SIMS_PER_TEMPERATURE_VALUE):
 
-        grid = ca.start_grid(GRIDSIZE_X, GRIDSIZE_Y, p,p_1)
-
-        N = ca.get_number_of_nodes_in_grid(grid)
-        node_coordinates = ca.get_node_coordinates(grid)
-        distance_matrix = ca.get_distance_matrix(node_coordinates)
-
-
-        leader_node_index = ca.get_leader_node_index(
-            node_coordinates, GRIDSIZE_X, GRIDSIZE_Y)
-        beta = ca.get_beta_matrix(N, BETA_PEOPLE, BETA_LEADER, leader_node_index)
-        node_influences = ca.get_node_influences(
-            N, INFLUENCE_DISTRIBUTION_MEAN, leader_node_index, INFLUENCE_LEADER)
-
-
-        # Simulate
-    
-        simulation = np.ndarray((TIMESTEPS, GRIDSIZE_X, GRIDSIZE_Y))
-        cluster_sizes = np.zeros(TIMESTEPS)
-
-        # First step
-        simulation[0, :, :] = grid
-        cluster_sizes[0] = ca.cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
-        
-        # Other steps
-        for time_step in range(TIMESTEPS-1):
-            grid = ca.update_opinion(grid, N, node_influences, node_coordinates, distance_matrix,
-                                    leader_node_index, BETA_LEADER, BETA_PEOPLE, TEMPERATURE, H)
-
-            cluster_size = ca.cluster_size_leader(grid,distance_matrix,leader_node_index,node_coordinates)
-            cluster_sizes[time_step+1] = cluster_size
-            simulation[time_step+1, :, :] = grid
-    
-
-    # Print last state
+        model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+        data = model.evolve(TIMESTEPS)
+        simulation = data['opinions']
+        cluster_sizes = data['cluster_sizes']
 
     # Get average cluster size
     av_cluster_size = np.mean(cluster_sizes)
@@ -236,7 +183,7 @@ for T in range(NUMBER_OF_TEMPERATURE_VALUES_TO_TEST):
 #Print last step of last sim with max temp
 # Plot it
 plt.figure()
-plt.imshow(grid, cmap='seismic',interpolation='nearest', vmin=-1, vmax=1)
+plt.imshow(model.opinion_grid, cmap='seismic',interpolation='nearest', vmin=-1, vmax=1)
 plt.title(f'End,\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={INFLUENCE_LEADER},c_radius={int(average_cluster_sizes[T])}')
 plt.tight_layout()
 plt.show()
