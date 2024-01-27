@@ -29,8 +29,8 @@ INFLUENCE_LEADER = 400
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
 
-TEMPERATURE=np.linspace(0,30,5)
-simulation_times = 5    # Run times
+TEMPERATURE=np.linspace(0,40,10)
+simulation_times = 8    # Run times
 Mean_cluster_radius = []
 
 
