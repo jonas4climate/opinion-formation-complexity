@@ -3,7 +3,7 @@ Plot graph 2 of paper
 """
 
 import numpy as np
-import CA_module as ca
+import ca.CA_module as ca
 import matplotlib.pyplot as plt
 from scipy.special import ellipeinc
 

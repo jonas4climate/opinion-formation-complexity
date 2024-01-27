@@ -9,7 +9,7 @@ p_overcoming_leader = f(TEMPERATURE)
 
 """
 
-import CA_module as ca
+import ca.CA_module as ca
 import numpy as np
 import matplotlib.pyplot as plt
 
