@@ -28,13 +28,13 @@ class CA(object):
         self.s_mean = influence_people_mean
         self.q = influence_prob_dist_func
         self.d = distance_func
-        self.__starting_grid = self.__gen_initial_opinion_grid()
-        self.opinion_grid = self.__starting_grid.copy()
+        self.starting_grid = self.__gen_initial_opinion_grid()
+        self.opinion_grid = self.starting_grid.copy()
         self.N = self.__gen_number_of_nonempty_nodes_in_grid()
         self.__node_coords = self.__gen_array_node_coord_tuples()
         self.__leader_node_coord_idx = self.__gen_leader_coord_index()
-        self.__distance_matrix = self.__gen_distance_matrix()
-        self.__beta_matrix = self.__gen_beta_matrix(beta_people, beta_leader)
+        self.distance_matrix = self.__gen_distance_matrix()
+        self.beta_matrix = self.__gen_beta_matrix(beta_people, beta_leader)
         self.__node_influences = self.__gen_node_influences(influence_leader)
 
 
@@ -151,7 +151,7 @@ class CA(object):
         leader_opinion = self.opinion_grid[center_x, center_y]
 
         # Get distance of nodes to leader from distance matrix!!!
-        leader_distance_matrix = self.__distance_matrix[self.__leader_node_coord_idx,:]
+        leader_distance_matrix = self.distance_matrix[self.__leader_node_coord_idx,:]
         
         # Cluster has radius r if all nodes at a smaller distance than r
         # to the center have the same opinion as the leader
@@ -216,7 +216,7 @@ class CA(object):
 
                     sigma_j = grid[j_x, j_y]
                     s_j = self.__node_influences[j]
-                    d_ij = self.__distance_matrix[i, j]
+                    d_ij = self.distance_matrix[i, j]
 
                     # Compute the function of the distance
                     # TODO: Make it a function
@@ -225,7 +225,7 @@ class CA(object):
                     summation += (s_j * sigma_i * sigma_j)/(g_d_ij)
 
             # Combine to get social impact
-            I_i = -s_i*self.__beta_matrix[i] - sigma_i*self.h - summation
+            I_i = -s_i*self.beta_matrix[i] - sigma_i*self.h - summation
 
             # Update opinion
             if self.temp == 0:
@@ -264,11 +264,11 @@ class CA(object):
         return data
     
     def reset(self):
-        if np.all(self.__starting_grid == self.opinion_grid):
+        if np.all(self.starting_grid == self.opinion_grid):
             warning('Grid hasn\'t changed since initialization, no need to reset.')
             return
         
-        self.opinion_grid = self.__starting_grid.copy()
+        self.opinion_grid = self.starting_grid.copy()
         return
 
 # do not know which a to use but use a1 first 
