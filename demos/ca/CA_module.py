@@ -247,6 +247,25 @@ class CA(object):
         # simulation[time_step+1,:,:] = grid
         return grid
     
+    ####### new function for fig.3
+    def mean_cluster_radius(self):
+        
+        center_x = (self.gridsize_x - 1) // 2
+        center_y = (self.gridsize_y - 1) // 2
+        
+        leader_opinion = self.opinion_grid[center_x, center_y]
+        
+        R = self.gridsize_x // 2
+        circle_area = np.pi * R**2
+        
+        # calculate the number of cells with opinion +1
+        positive_opinions = np.sum(self.opinion_grid == leader_opinion)
+        
+        # calculate the mean cluster radius
+        mean_cluster_radius = np.sqrt(positive_opinions / circle_area * R**2)
+        return mean_cluster_radius
+    #######
+    
     def evolve(self, timesteps):
         opinion_grid_history = np.ndarray((timesteps, self.gridsize_x, self.gridsize_y))
         cluster_sizes = np.zeros(timesteps)
