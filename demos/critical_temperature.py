@@ -14,7 +14,7 @@ above which we can overcome the leader infuence
 ################################
 
 import numpy as np
-import CA_module as ca
+import demos.ca.CA_module as ca
 import matplotlib.pyplot as plt
 
 ################################
