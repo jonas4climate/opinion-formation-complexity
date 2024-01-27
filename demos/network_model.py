@@ -224,12 +224,12 @@ for t in range(TIMESTEPS):
 #
 # #Visualization
 # # Extract node values for visualization
-# node_values = [data['impact'] for _, data in G.nodes(data=True)]
+node_values = [data['impact'] for _, data in G.nodes(data=True)]
 #
 # # Draw the graph with node colors based on the attribute 'value'
-# pos = nx.spring_layout(G)  # Positions nodes using the spring layout algorithm
-# nx.draw(G, pos, with_labels=True, node_color=node_values, cmap=plt.cm.RdYlBu, node_size=1000)
+pos = nx.spring_layout(G)  # Positions nodes using the spring layout algorithm
+nx.draw(G, pos, with_labels=True, node_color=node_values, cmap=plt.cm.RdYlBu, node_size=1000)
 #
 # # Display the plot
-# plt.show()
+plt.show()
 #
