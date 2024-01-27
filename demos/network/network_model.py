@@ -4,7 +4,15 @@ import numpy as np
 import os.path as path
 import logging
 from logging import warning, error, info, debug
-from ca.CA_module import prob_dist_influence_people as q
+
+#from ca.CA_module import prob_dist_influence_people as q # Commented as cant import from neighboor folder
+
+def q(mean):
+    # Probability distribution for the node influence
+    return np.random.uniform(0, 2*mean)
+
+
+
 from matplotlib.animation import FuncAnimation
 
 #Importing real network data
@@ -199,10 +207,10 @@ def update_network(graph):
 
 
 #Define parameters
-GRIDSIZE_X, GRIDSIZE_Y = (21,21)
+GRIDSIZE_X, GRIDSIZE_Y = (5,5)
 TIMESTEPS = 5
 
-P_OCCUPATION = 0.5
+P_OCCUPATION = 1
 P_OPINION = 0.5
 H = 1
 MEAN_S = 1
@@ -220,16 +228,45 @@ for t in range(TIMESTEPS):
     print(f"Timestep {t}:")
     update_network(G)
 
-#
-#
+    # Plot network evolving over time
+
+
+# TODO: Draw network in 2D space correctly
+print(G)
+#print(G.nodes)
+#print(G.nodes(data=True))
+
+
+
 # #Visualization
 # # Extract node values for visualization
 node_values = [data['impact'] for _, data in G.nodes(data=True)]
 #
 # # Draw the graph with node colors based on the attribute 'value'
-pos = nx.spring_layout(G)  # Positions nodes using the spring layout algorithm
-nx.draw(G, pos, with_labels=True, node_color=node_values, cmap=plt.cm.RdYlBu, node_size=1000)
-#
+#pos = nx.spring_layout(G)  # Positions nodes using the spring layout algorithm
+
+
+pos = {}
+
+for n in G.nodes:
+    a,b = n
+    pos[n] = np.array([a,b])
+
+#pos = nx.circular_layout(G, scale=1, center=(2,2), dim=2)
+
+
+#nx.draw_networkx_nodes(G, pos=pos)
+#nx.draw_networkx_edges(G, pos=pos)
+#nx.draw_networkx_labels(G, pos=pos)
+
+nx.draw(G, pos, with_labels=True, node_color=node_values, cmap=plt.cm.RdYlBu, node_size=100)
+
+#plt.gca().invert_yaxis()
+#plt.gca().invert_xaxis()
+
+
+plt.axis("equal")
+plt.grid()
 # # Display the plot
 plt.show()
 #
