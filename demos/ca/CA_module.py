@@ -28,6 +28,22 @@ def prob_dist_influence_people(mean, distribution_type = 'uniform'):
     if distribution_type == 'exponential':
         return np.random.exponential(mean)
 
+def g(distance_ij, type = 'linear', c = 1):
+    """
+    Define function g based on distance distance_ij and constant c
+    """
+    if type == 'linear':
+        return c * distance_ij
+
+    if type == 'exponential':
+        return c * np.exp(distance_ij)
+
+    if type == 'power':
+        return distance_ij**c
+
+    if type == 'logarithmic':
+        return c * np.log(distance_ij)
+
 
 class CA(object):
 
