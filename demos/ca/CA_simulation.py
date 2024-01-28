@@ -36,8 +36,8 @@ data = model.evolve(5)
 
 model.reset()
 data = model.evolve(TIMESTEPS)
-simulation = data['opinions']
-cluster_sizes = data['cluster_sizes']
+model.plot_opinion_grid_at_time_t(data, 0)
+plt.show(block=True)
 
 
 ################################

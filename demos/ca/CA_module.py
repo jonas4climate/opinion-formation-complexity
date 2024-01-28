@@ -6,8 +6,7 @@ import numpy as np
 from math import floor
 from scipy.special import ellipeinc
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-import cellpylib as cpl
+from matplotlib.animation import FuncAnimation
 from tqdm import tqdm
 import logging
 from logging import warning, error, info, debug
@@ -298,7 +297,7 @@ class CA(object):
         self.opinion_grid = self.starting_grid.copy()
         return
     
-    def plot_opinion_grid_at_time_t(self, data, t):
+    def plot_opinion_grid_at_time_t(self, data, t, save=False):
         """
         Plot the opinion grid at timestep t from data returned by `evolve()`
         """
@@ -308,9 +307,30 @@ class CA(object):
         plt.title(f"Opinion grid at $t={t}$ ($T={self.temp}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
         plt.axis(False)
         plt.grid(False)
-        plt.colorbar()
-        plt.savefig(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_t={t}.png', dpi=300)
+        if save:
+            plt.savefig(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_t={t}.png', dpi=300)
 
+    def plot_opinion_grid_evolution(self, data, viz_range=None, interval=250, save=False):
+        """
+        Plot the evolution of the opinion grid from data returned by `evolve()`
+        """
+        plt.figure(figsize=(6,6), layout='tight')
+        opinion_history = data['opinions']
+
+        def update(t):
+            plt.clf()
+            plt.imshow(opinion_history[t], cmap=plt.cm.RdYlBu, vmin=-1, vmax=1)
+            plt.axis(False)
+            plt.grid(False)
+            plt.title(f"Opinion grid at $t={t}$ ($T={self.temp}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
+            return plt
+
+        if viz_range is None:
+            anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
+        else:
+            anim = FuncAnimation(plt.gcf(), update, frames=range(*viz_range), interval=interval)
+        if save:
+            anim.save(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_evolution.mp4', dpi=300)
 
 # do not know which a to use but use a1 first 
 # Inside and outside impact

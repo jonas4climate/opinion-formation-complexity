@@ -226,7 +226,7 @@ class Network(object):
             a,b = n
             pos[n] = np.array([a,b])
 
-        nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[0], cmap=plt.cm.RdYlBu, node_size=100)
+        nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[0], cmap=plt.cm.RdYlBu, node_size=100, vmin=-1, vmax=1)
         nx.draw_networkx_edges(self.G, pos, alpha=0.1)
         plt.axis("equal")
         plt.grid(False)
@@ -249,7 +249,7 @@ class Network(object):
 
         def update(t):
             plt.clf()
-            nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], cmap=plt.cm.RdYlBu, node_size=100)
+            nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], cmap=plt.cm.RdYlBu, node_size=100, vmin=-1, vmax=1)
             if draw_edges:
                 nx.draw_networkx_edges(self.G, pos, alpha=0.1)
             plt.axis("equal")
