@@ -25,6 +25,23 @@ def prob_dist_influence_people(mean):
     # Probability distribution for the node influence
     return np.random.uniform(0, 2*mean)
 
+def g(distance_ij, type = 'linear', c = 1):
+    """
+    Define function g based on distance distance_ij and constant c
+    """
+    if type == 'linear':
+        return c * distance_ij
+
+    if type == 'exponential':
+        return c * np.exp(distance_ij)
+
+    if type == 'power':
+        return distance_ij**c
+
+    if type == 'logarithmic':
+        return c * np.log(distance_ij)
+
+
 class Network(object):
 
     def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion, s_mean, beta_people, temperature, s_l, h, distance_func=euclidean_distance, influence_prob_dist_func=prob_dist_influence_people):

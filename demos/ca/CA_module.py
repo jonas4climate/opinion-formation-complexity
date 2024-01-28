@@ -169,7 +169,7 @@ class CA(object):
         # to the center have the same opinion as the leader
         # Start with radius 0
         c_radius = 0.5
-        max_c_radius = floor(gridsize_x/2) # TODO: Generalize to rectangle, this assumes square
+        max_c_radius = floor(max(gridsize_x, gridsize_y)/2)
         consulted_nodes =np.array([])
 
         while c_radius < max_c_radius:
