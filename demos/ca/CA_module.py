@@ -303,7 +303,7 @@ class CA(object):
         """
         plt.figure(figsize=(6,6), layout='tight')
         opinion_history = data['opinions']
-        plt.imshow(opinion_history[t], cmap=plt.cm.RdYlBu, vmin=-1, vmax=1)
+        plt.imshow(opinion_history[t], vmin=-1, vmax=1)
         plt.title(f"Opinion grid at $t={t}$ ($T={self.temp}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
         plt.axis(False)
         plt.grid(False)
@@ -319,7 +319,7 @@ class CA(object):
 
         def update(t):
             plt.clf()
-            plt.imshow(opinion_history[t], cmap=plt.cm.RdYlBu, vmin=-1, vmax=1)
+            plt.imshow(opinion_history[t], vmin=-1, vmax=1)
             plt.axis(False)
             plt.grid(False)
             plt.title(f"Opinion grid at $t={t}$ ($T={self.temp}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
