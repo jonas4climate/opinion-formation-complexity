@@ -8,7 +8,7 @@ from logging import warning, error, info, debug
 from matplotlib.animation import FuncAnimation
 from copy import deepcopy
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 # from ..ca.CA_module import prob_dist_influence_people as q
 
@@ -270,17 +270,17 @@ TIMESTEPS = 20
 
 P_OCCUPATION = 1
 P_OPINION = 1
-H = 0.1
+H = 0
 S_MEAN = 1
 BETA_PEOPLE = 1
 TEMPERATURE = 1
 
-S_L = 100
+S_L = 150
 
 
 # Initialize network
 network = Network(GRIDSIZE_X, GRIDSIZE_Y, P_OCCUPATION, P_OPINION, S_MEAN, BETA_PEOPLE, TEMPERATURE, S_L, H)
 data = network.evolve(TIMESTEPS)
 
-network.plot_opinion_network_evolution(data)
+network.plot_opinion_network_evolution(data, interval=250)
 plt.show()
