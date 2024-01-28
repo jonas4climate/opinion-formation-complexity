@@ -36,7 +36,7 @@ data = model.evolve(5)
 
 model.reset()
 data = model.evolve(TIMESTEPS)
-model.plot_opinion_grid_at_time_t(data, 0)
+model.plot_opinion_grid_at_time_t(data, 10)
 plt.show(block=True)
 
 

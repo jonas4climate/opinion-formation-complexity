@@ -16,13 +16,18 @@ logging.basicConfig(level=logging.INFO)
 def euclidean_distance(x0, y0, x1, y1):
     return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
-def prob_dist_influence_people(mean):
-    # Probability distribution for the node influence
-    return np.random.uniform(0, 2*mean)
+def prob_dist_influence_people(mean, distribution_type = 'uniform'):
 
-    ## Probability distribution for the node influence
-    # TODO: Make it a distribution, was simplified here
-    #return 1 #np.random.uniform(0,2*mean)
+    # Probability distribution for the node influence
+    if distribution_type == 'uniform':
+        return np.random.uniform(0, 2*mean)
+
+    if distribution_type == 'normal':
+        return np.random.normal(mean, scale =1)
+
+    if distribution_type == 'exponential':
+        return np.random.exponential(mean)
+
 
 class CA(object):
 
