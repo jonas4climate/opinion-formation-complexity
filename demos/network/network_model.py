@@ -28,7 +28,7 @@ def prob_dist_influence_people(mean):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion, s_mean, beta_people, temperature, s_l, distance_func=euclidean_distance, influence_prob_dist_func=prob_dist_influence_people):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion, s_mean, beta_people, temperature, s_l, h, distance_func=euclidean_distance, influence_prob_dist_func=prob_dist_influence_people):
         self.gridsize_x = gridsize_x
         self.gridsize_y = gridsize_y
         self.p_occupation = p_occupation
@@ -36,6 +36,7 @@ class Network(object):
         self.s_mean = s_mean
         self.beta_people = beta_people
         self.temperature = temperature
+        self.h = h
         self.s_l = s_l
         self.d = distance_func
         self.q = influence_prob_dist_func
@@ -153,28 +154,21 @@ class Network(object):
                 g_d_ij = d_ij
                 summation += (s_j * sigma_i * sigma_j) / (g_d_ij)
 
-        impact = -s_i * beta - sigma_i * H - summation
+        impact = -s_i * beta - sigma_i * self.h - summation
         return impact
 
     def __update_opinion(self, sigma_i, impact):
         """
         Update node opinion sigma_i following the model formula
         """
-        # Update node opinion
         if self.temperature == 0:
             new_opinion = -np.sign(impact * sigma_i)
             if new_opinion != sigma_i:
                 info(f"Opinion change: {sigma_i} -> {new_opinion}")
         else:
-            # Compute probability of change and update if necessary
-            probability_staying = (np.exp(-impact / self.temperature)) / \
-                                (np.exp(-impact / self.temperature) + np.exp(impact / self.temperature))
-            opinion_change = np.random.rand() < probability_staying  # Fix the condition
-
-            if opinion_change:
-                new_opinion = -sigma_i
-            else:
-                new_opinion = sigma_i  # If no change, keep the current opinion
+            probability_staying = np.exp(-impact / self.temperature) / (np.exp(-impact / self.temperature) + np.exp(impact / self.temperature))
+            opinion_change = probability_staying < np.random.rand()
+            new_opinion = -sigma_i if opinion_change else sigma_i
 
         return new_opinion
 
@@ -192,7 +186,7 @@ class Network(object):
             info(f"Node {node}, with attributes {attributes}")
 
         # Copy original network
-        G_prev_step = deepcopy(self.G)
+        G_prev_step = self.G.copy()
 
         for node in nodes:
             # First compute the current impact asserted on the node
@@ -242,7 +236,7 @@ class Network(object):
         if save:
             plt.savefig(f'figures/{network.gridsize_x}x{network.gridsize_y}_opinion_network_t={t}.png', dpi=300)
 
-    def plot_opinion_network_evolution(self, data, interval=250, save=False):
+    def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False):
         """
         Plot the evolution of the opinion network graph from data returned by `evolve()`
         """
@@ -257,38 +251,36 @@ class Network(object):
         def update(t):
             plt.clf()
             nx.draw_networkx_nodes(network.G, pos, node_color=opinion_history[t], cmap=plt.cm.RdYlBu, node_size=100)
-            nx.draw_networkx_edges(network.G, pos, alpha=0.1)
+            if draw_edges:
+                nx.draw_networkx_edges(network.G, pos, alpha=0.1)
             plt.axis("equal")
             plt.grid(False)
             plt.axis(False)
             plt.title(f"Opinion network at $t={t}$ ($T={network.temperature}$, $s_l={network.s_l}$, $\\hat{{s}}$={network.s_mean}, $\\beta$={network.beta_people}, $p_{{occ}}$={network.p_occupation}, $p_{{1}}$={network.p_opinion})")
             return plt
 
-        anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval, repeat_delay=3000)
+        anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
         if save:
             anim.save(f'figures/{network.gridsize_x}x{network.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
 
 
 #Define parameters
-GRIDSIZE_X, GRIDSIZE_Y = (9,9)
-TIMESTEPS = 5
+GRIDSIZE_X, GRIDSIZE_Y = (21,21)
+TIMESTEPS = 20
 
 P_OCCUPATION = 1
-P_OPINION = 1.0
-H = 1
+P_OPINION = 1
+H = 0.1
 S_MEAN = 1
 BETA_PEOPLE = 1
-TEMPERATURE = 0
+TEMPERATURE = 1
 
 S_L = 100
 
 
 # Initialize network
-network = Network(GRIDSIZE_X, GRIDSIZE_Y, P_OCCUPATION, P_OPINION, S_MEAN, BETA_PEOPLE, TEMPERATURE, S_L)
+network = Network(GRIDSIZE_X, GRIDSIZE_Y, P_OCCUPATION, P_OPINION, S_MEAN, BETA_PEOPLE, TEMPERATURE, S_L, H)
 data = network.evolve(TIMESTEPS)
 
 network.plot_opinion_network_evolution(data)
 plt.show()
-
-# network.plot_opinion_network_evolution(data)
-# plt.show()

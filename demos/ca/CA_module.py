@@ -147,10 +147,7 @@ class CA(object):
         node_influences = np.zeros(self.N)
 
         for i in range(self.N):
-            if i == self.__leader_node_coord_idx:
-                node_influences[i] = s_L
-            else:
-                node_influences[i] = self.q(self.s_mean)
+            node_influences[i] = s_L if i == self.__leader_node_coord_idx else self.q(self.s_mean)
 
         return node_influences
     
