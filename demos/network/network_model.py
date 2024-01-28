@@ -6,8 +6,9 @@ from tqdm import tqdm
 import logging
 from logging import warning, error, info, debug
 from matplotlib.animation import FuncAnimation
+from copy import deepcopy
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 
 # from ..ca.CA_module import prob_dist_influence_people as q
 
@@ -118,6 +119,7 @@ class Network(object):
 
         # Adjust leader influence
         G.nodes[center_node]['influence'] = self.s_l
+        G.nodes[center_node]['opinion'] = -1
 
 
     def __get_node_influences(self, N):
@@ -161,6 +163,8 @@ class Network(object):
         # Update node opinion
         if self.temperature == 0:
             new_opinion = -np.sign(impact * sigma_i)
+            if new_opinion != sigma_i:
+                info(f"Opinion change: {sigma_i} -> {new_opinion}")
         else:
             # Compute probability of change and update if necessary
             probability_staying = (np.exp(-impact / self.temperature)) / \
@@ -188,11 +192,11 @@ class Network(object):
             info(f"Node {node}, with attributes {attributes}")
 
         # Copy original network
-        G_copy = self.G.copy()
+        G_prev_step = deepcopy(self.G)
 
         for node in nodes:
             # First compute the current impact asserted on the node
-            impact = self.__get_impact(node, G_copy)
+            impact = self.__get_impact(node, G_prev_step)
             self.G.nodes[node]['impact'] = impact
 
             # Update opinion of node
@@ -200,7 +204,6 @@ class Network(object):
             new_opinion = self.__update_opinion(sigma_i, impact)
             self.G.nodes[node]['opinion'] = new_opinion
 
-        self.G = G_copy
 
     def evolve(self, timesteps):
         """
@@ -217,13 +220,61 @@ class Network(object):
         
         data = {'opinions': opinion_history}
         return data
+    
+    def plot_opinion_network_at_time_t(self, data, t, save=False):
+        """
+        Plot the opinion network graph at timestep t from data returned by `evolve()`
+        """
+        plt.figure(figsize=(6,6), layout='tight')
+        opinion_history = data['opinions']
+
+        pos = {}
+        for n in network.G.nodes:
+            a,b = n
+            pos[n] = np.array([a,b])
+
+        nx.draw_networkx_nodes(network.G, pos, node_color=opinion_history[0], cmap=plt.cm.RdYlBu, node_size=100)
+        nx.draw_networkx_edges(network.G, pos, alpha=0.1)
+        plt.axis("equal")
+        plt.grid(False)
+        plt.axis(False)
+        plt.title(f"Opinion network at $t={t}$ ($T={network.temperature}$, $s_l={network.s_l}$, $\\hat{{s}}$={network.s_mean}, $\\beta$={network.beta_people}, $p_{{occ}}$={network.p_occupation}, $p_{{1}}$={network.p_opinion})")
+        if save:
+            plt.savefig(f'figures/{network.gridsize_x}x{network.gridsize_y}_opinion_network_t={t}.png', dpi=300)
+
+    def plot_opinion_network_evolution(self, data, interval=250, save=False):
+        """
+        Plot the evolution of the opinion network graph from data returned by `evolve()`
+        """
+        plt.figure(figsize=(6,6), layout='tight')
+        opinion_history = data['opinions']
+
+        pos = {}
+        for n in network.G.nodes:
+            a,b = n
+            pos[n] = np.array([a,b])
+
+        def update(t):
+            plt.clf()
+            nx.draw_networkx_nodes(network.G, pos, node_color=opinion_history[t], cmap=plt.cm.RdYlBu, node_size=100)
+            nx.draw_networkx_edges(network.G, pos, alpha=0.1)
+            plt.axis("equal")
+            plt.grid(False)
+            plt.axis(False)
+            plt.title(f"Opinion network at $t={t}$ ($T={network.temperature}$, $s_l={network.s_l}$, $\\hat{{s}}$={network.s_mean}, $\\beta$={network.beta_people}, $p_{{occ}}$={network.p_occupation}, $p_{{1}}$={network.p_opinion})")
+            return plt
+
+        anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval, repeat_delay=3000)
+        if save:
+            anim.save(f'figures/{network.gridsize_x}x{network.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
+
 
 #Define parameters
 GRIDSIZE_X, GRIDSIZE_Y = (9,9)
 TIMESTEPS = 5
 
 P_OCCUPATION = 1
-P_OPINION = 0.5
+P_OPINION = 1.0
 H = 1
 S_MEAN = 1
 BETA_PEOPLE = 1
@@ -235,15 +286,9 @@ S_L = 100
 # Initialize network
 network = Network(GRIDSIZE_X, GRIDSIZE_Y, P_OCCUPATION, P_OPINION, S_MEAN, BETA_PEOPLE, TEMPERATURE, S_L)
 data = network.evolve(TIMESTEPS)
-opinion_history = data['opinions']
 
-pos = {}
-for n in network.G.nodes:
-    a,b = n
-    pos[n] = np.array([a,b])
-
-nx.draw_networkx_nodes(network.G, pos, node_color=opinion_history[0], cmap=plt.cm.RdYlBu, node_size=100)
-nx.draw_networkx_edges(network.G, pos, alpha=0.1)
-plt.axis("equal")
-plt.grid(False)
+network.plot_opinion_network_evolution(data)
 plt.show()
+
+# network.plot_opinion_network_evolution(data)
+# plt.show()
