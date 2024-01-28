@@ -10,7 +10,6 @@ from copy import deepcopy
 
 logging.basicConfig(level=logging.WARNING)
 
-# from ..ca.CA_module import prob_dist_influence_people as q
 
 def euclidean_distance(node_1, node_2):
     """
@@ -223,18 +222,18 @@ class Network(object):
         opinion_history = data['opinions']
 
         pos = {}
-        for n in network.G.nodes:
+        for n in self.G.nodes:
             a,b = n
             pos[n] = np.array([a,b])
 
-        nx.draw_networkx_nodes(network.G, pos, node_color=opinion_history[0], cmap=plt.cm.RdYlBu, node_size=100)
-        nx.draw_networkx_edges(network.G, pos, alpha=0.1)
+        nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[0], cmap=plt.cm.RdYlBu, node_size=100)
+        nx.draw_networkx_edges(self.G, pos, alpha=0.1)
         plt.axis("equal")
         plt.grid(False)
         plt.axis(False)
-        plt.title(f"Opinion network at $t={t}$ ($T={network.temperature}$, $s_l={network.s_l}$, $\\hat{{s}}$={network.s_mean}, $\\beta$={network.beta_people}, $p_{{occ}}$={network.p_occupation}, $p_{{1}}$={network.p_opinion})")
+        plt.title(f"Opinion network at $t={t}$ ($T={self.temperature}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta_people}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
         if save:
-            plt.savefig(f'figures/{network.gridsize_x}x{network.gridsize_y}_opinion_network_t={t}.png', dpi=300)
+            plt.savefig(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_t={t}.png', dpi=300)
 
     def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False):
         """
@@ -244,43 +243,44 @@ class Network(object):
         opinion_history = data['opinions']
 
         pos = {}
-        for n in network.G.nodes:
+        for n in self.G.nodes:
             a,b = n
             pos[n] = np.array([a,b])
 
         def update(t):
             plt.clf()
-            nx.draw_networkx_nodes(network.G, pos, node_color=opinion_history[t], cmap=plt.cm.RdYlBu, node_size=100)
+            nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], cmap=plt.cm.RdYlBu, node_size=100)
             if draw_edges:
-                nx.draw_networkx_edges(network.G, pos, alpha=0.1)
+                nx.draw_networkx_edges(self.G, pos, alpha=0.1)
             plt.axis("equal")
             plt.grid(False)
             plt.axis(False)
-            plt.title(f"Opinion network at $t={t}$ ($T={network.temperature}$, $s_l={network.s_l}$, $\\hat{{s}}$={network.s_mean}, $\\beta$={network.beta_people}, $p_{{occ}}$={network.p_occupation}, $p_{{1}}$={network.p_opinion})")
+            plt.title(f"Opinion network at $t={t}$ ($T={self.temperature}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta_people}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
             return plt
 
         anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
         if save:
-            anim.save(f'figures/{network.gridsize_x}x{network.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
+            anim.save(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
 
+def animate_leader_cause_unification():
+    """
+    Animate the opinion network evolution for the case where the leader causes unification
+    """
+    x, y = (21,21)
+    timesteps = 20
 
-#Define parameters
-GRIDSIZE_X, GRIDSIZE_Y = (21,21)
-TIMESTEPS = 20
+    p_occupation = 1
+    p_opinion = 1
+    h = 0
+    s_mean = 1
+    beta = 1
+    temp = 1
 
-P_OCCUPATION = 1
-P_OPINION = 1
-H = 0
-S_MEAN = 1
-BETA_PEOPLE = 1
-TEMPERATURE = 1
+    s_l = 150
 
-S_L = 150
+    # Initialize network
+    network = Network(x, y, p_occupation, p_opinion, s_mean, beta, temp, s_l, h)
+    data = network.evolve(timesteps)
 
-
-# Initialize network
-network = Network(GRIDSIZE_X, GRIDSIZE_Y, P_OCCUPATION, P_OPINION, S_MEAN, BETA_PEOPLE, TEMPERATURE, S_L, H)
-data = network.evolve(TIMESTEPS)
-
-network.plot_opinion_network_evolution(data, interval=250)
-plt.show()
+    network.plot_opinion_network_evolution(data, interval=250)
+    plt.show()
