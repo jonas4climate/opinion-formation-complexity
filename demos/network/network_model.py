@@ -166,8 +166,7 @@ class Network(object):
                 s_j = G_copy.nodes[neighbor]['influence']
                 d_ij = G_copy[target_node][neighbor]['distance']
 
-                # TODO: Make it a function
-                g_d_ij = d_ij
+                g_d_ij = g(d_ij)
                 summation += (s_j * sigma_i * sigma_j) / (g_d_ij)
 
         impact = -s_i * beta - sigma_i * self.h - summation

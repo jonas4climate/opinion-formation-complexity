@@ -247,8 +247,7 @@ class CA(object):
                     d_ij = self.distance_matrix[i, j]
 
                     # Compute the function of the distance
-                    # TODO: Make it a function
-                    g_d_ij = d_ij
+                    g_d_ij = g(d_ij)
 
                     summation += (s_j * sigma_i * sigma_j)/(g_d_ij)
 
