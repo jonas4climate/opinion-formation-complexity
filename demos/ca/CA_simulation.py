@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 
 ################################
 
-GRIDSIZE_X,GRIDSIZE_Y = 41,41
-TIMESTEPS = 20
+GRIDSIZE_X,GRIDSIZE_Y = 21,21
+TIMESTEPS = 30
 TEMPERATURE = 40
 BETA_PEOPLE = 1
 BETA_LEADER = 1
