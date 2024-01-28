@@ -14,16 +14,27 @@ from logging import warning, error, info, debug
 
 logging.basicConfig(level=logging.INFO)
 
+def euclidean_distance(x0, y0, x1, y1):
+    return np.sqrt((x1-x0)**2 + (y1-y0)**2)
+
+def prob_dist_influence_people(mean):
+    # Probability distribution for the node influence
+    return np.random.uniform(0, 2*mean)
+
+    ## Probability distribution for the node influence
+    # TODO: Make it a distribution, was simplified here
+    #return 1 #np.random.uniform(0,2*mean)
+
 class CA(object):
 
-    def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_node_exists, p_opinion_1, influence_leader, influence_people_mean, distance_func, influence_prob_dist_func):
+    def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_occupation, p_opinion_1, influence_leader, influence_people_mean, distance_func=euclidean_distance, influence_prob_dist_func=prob_dist_influence_people):
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.temp = temperature
         self.beta = beta_people
         self.beta_l = beta_leader
         self.h = h
-        self.p = p_node_exists
-        self.p_1 = p_opinion_1
+        self.p_occupation = p_occupation
+        self.p_opinion = p_opinion_1
         self.s_l = influence_leader 
         self.s_mean = influence_people_mean
         self.q = influence_prob_dist_func
@@ -54,10 +65,10 @@ class CA(object):
                 if self.d(x_idx, y_idx, center_x, center_y) <= R:
                     # Assign a value with prob p
                     random_number = np.random.rand(1)
-                    if random_number < self.p:
+                    if random_number < self.p_occupation:
                         # Get -1 or 1 with p1
                         random_number = np.random.rand(1)
-                        grid[x_idx, y_idx] = 1 if random_number < self.p_1 else -1
+                        grid[x_idx, y_idx] = 1 if random_number < self.p_opinion else -1
         
         # Add leader in center with opinion 1
         grid[center_x, center_y] = 1
@@ -273,7 +284,7 @@ class CA(object):
         opinion_grid_history[0,:,:] = self.opinion_grid
         cluster_sizes[0] = self.__cluster_size_leader()
 
-        for time_step in tqdm(range(timesteps-1)):
+        for time_step in tqdm(range(timesteps-1)): # TODO: should be timesteps, code needs to be adjusted everywhere
             grid = self.__update_opinions()
             cluster_sizes[time_step+1] = self.__cluster_size_leader()
             opinion_grid_history[time_step+1, :, :] = grid
@@ -385,17 +396,6 @@ def analytical_expect_clusters(r, beta, h, s_l):
     condition_2 = bool(
         (2*np.pi*r - np.sqrt(np.pi) - beta - h)**2 - 32*s_l >= 0)
     return condition_1 and condition_2
-
-def euclidean_distance(x0, y0, x1, y1):
-    return np.sqrt((x1-x0)**2 + (y1-y0)**2)
-
-def prob_dist_influence_people(mean):
-    # Probability distribution for the node influence
-    return np.random.uniform(0, 2*mean)
-
-    ## Probability distribution for the node influence
-    # TODO: Make it a distribution, was simplified here
-    #return 1 #np.random.uniform(0,2*mean)
 
 def a(r, beta, h, s_l):
     """
