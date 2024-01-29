@@ -36,6 +36,9 @@ model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, temperature, BETA_LEADER, BETA_PEOPLE, H, 
 data = model.evolve(TIMESTEPS)
 
 # Step 4 - Plot opinion change to see if clusters do form
+for t in range(TIMESTEPS):
+    model.plot_opinion_grid_at_time_t(data, T)
+
 
 # Step 5 - Get cluster sizes from simulation
 R = GRIDSIZE_X/2
@@ -43,6 +46,7 @@ possible_cluster_sizes = R # As many elements as possible cluster radius: 1,2...
 cluster_sizes = np.zeros(R)
 
 # Step 6 - Plot them to see if their sizes follow power law
+
 
 # Step 7 - Verify it with the package powerlaw
 
