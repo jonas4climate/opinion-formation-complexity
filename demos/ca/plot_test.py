@@ -1,4 +1,6 @@
 import CA_module as ca
+#from ... import CA_module as ca
+
 import matplotlib.pyplot as plt
 
 
