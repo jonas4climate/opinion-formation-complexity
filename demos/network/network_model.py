@@ -28,7 +28,7 @@ def prob_dist_influence_people(mean, distribution_type = 'uniform'):
         return np.random.uniform(0, 2*mean)
 
     if distribution_type == 'normal':
-        return np.abs(np.random.normal(mean, scale=1))
+        return np.abs(np.random.normal(2*mean, scale=1))
 
     if distribution_type == 'exponential':
         return np.random.exponential(mean)
