@@ -28,7 +28,7 @@ def prob_dist_influence_people(mean, distribution_type = 'uniform'):
         return np.random.uniform(0, 2*mean)
 
     if distribution_type == 'normal':
-        return np.random.normal(2*mean, scale =1)
+        return np.abs(np.random.normal(mean, scale=1))
 
     if distribution_type == 'exponential':
         return np.random.exponential(mean)
@@ -52,7 +52,7 @@ def g(distance_ij, type = 'linear', c = 1):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion, s_mean, beta_people, temperature, s_l, h, distance_func=euclidean_distance, influence_prob_dist_func=prob_dist_influence_people):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion, s_mean, beta_people, temperature, s_l, h, distance_func=euclidean_distance, influence_prob_dist_func='uniform', distance_scaling_func='linear'):
         self.gridsize_x = gridsize_x
         self.gridsize_y = gridsize_y
         self.p_occupation = p_occupation
@@ -63,7 +63,8 @@ class Network(object):
         self.h = h
         self.s_l = s_l
         self.d = distance_func
-        self.q = influence_prob_dist_func
+        self.g = lambda d: g(d, type=distance_scaling_func)
+        self.q = lambda mean: prob_dist_influence_people(mean, distribution_type=influence_prob_dist_func)
         self.G = self.__initialize_network()
         self.N = self.G.number_of_nodes()
 
@@ -174,7 +175,7 @@ class Network(object):
                 s_j = G_copy.nodes[neighbor]['influence']
                 d_ij = G_copy[target_node][neighbor]['distance']
 
-                g_d_ij = g(d_ij)
+                g_d_ij = self.g(d_ij)
                 summation += (s_j * sigma_i * sigma_j) / (g_d_ij)
 
         impact = -s_i * beta - sigma_i * self.h - summation
