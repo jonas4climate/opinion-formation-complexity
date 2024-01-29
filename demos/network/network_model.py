@@ -131,7 +131,7 @@ class Network(object):
         N = G.number_of_nodes()
 
         # Create the attributes for the nodes
-        opinions = np.random.choice([-1, 1], size=N, p=[1 - self.p_opinion, self.p_opinion])
+        opinions = np.random.choice([1, -1], size=N, p=[self.p_opinion, 1-self.p_opinion])
         influences = self.__get_node_influences(N)
         betas = [self.beta_people] * N
         impacts = np.zeros(N)

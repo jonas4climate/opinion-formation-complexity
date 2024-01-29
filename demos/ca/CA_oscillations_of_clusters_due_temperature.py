@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from CA_module import CA, euclidean_distance, prob_dist_influence_people
+from CA_module import CA
 
 GRIDSIZE_X,GRIDSIZE_Y = 21,21
 TIMESTEPS = 50
@@ -15,7 +14,7 @@ p_1 = 0
 S_L = 120   # Leader influence
 INFLUENCE_DISTRIBUTION_MEAN = 1
 
-ca = CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, S_L, INFLUENCE_DISTRIBUTION_MEAN, euclidean_distance, prob_dist_influence_people)
+ca = CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, S_L, INFLUENCE_DISTRIBUTION_MEAN)
 data = ca.evolve(TIMESTEPS)
 ca.plot_opinion_grid_evolution(data, interval=150, save=True)
 plt.show()

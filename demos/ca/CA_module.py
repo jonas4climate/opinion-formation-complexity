@@ -16,16 +16,16 @@ logging.basicConfig(level=logging.INFO)
 def euclidean_distance(x0, y0, x1, y1):
     return np.sqrt((x1-x0)**2 + (y1-y0)**2)
 
-def prob_dist_influence_people(mean, distribution_type = 'uniform'):
+def prob_dist_influence_people(mean, type = 'uniform'):
 
     # Probability distribution for the node influence
-    if distribution_type == 'uniform':
+    if type == 'uniform':
         return np.random.uniform(0, 2*mean)
 
-    if distribution_type == 'normal':
+    if type == 'normal':
         return np.abs(np.random.normal(mean, scale=1))
 
-    if distribution_type == 'exponential':
+    if type == 'exponential':
         return np.random.exponential(mean)
 
 def g(distance_ij, type = 'linear', c = 1):
@@ -47,7 +47,7 @@ def g(distance_ij, type = 'linear', c = 1):
 
 class CA(object):
 
-    def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_occupation, p_opinion_1, influence_leader, influence_people_mean, distance_func=euclidean_distance, influence_prob_dist_func='uniform', distance_scaling_func='linear'):
+    def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_occupation, p_opinion_1, influence_leader, influence_people_mean, distance_func=euclidean_distance, influence_prob_dist_func='uniform', distance_scaling_func='linear', dist_scale_factor=1):
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.temp = temperature
         self.beta = beta_people
@@ -57,8 +57,8 @@ class CA(object):
         self.p_opinion = p_opinion_1
         self.s_l = influence_leader 
         self.s_mean = influence_people_mean
-        self.q = lambda mean: prob_dist_influence_people(mean, distribution_type=influence_prob_dist_func)
-        self.g = lambda d: g(d, type=distance_scaling_func)
+        self.q = lambda mean: prob_dist_influence_people(mean, type=influence_prob_dist_func)
+        self.g = lambda d: g(d, type=distance_scaling_func, c=dist_scale_factor)
         self.d = distance_func
         self.starting_grid = self.__gen_initial_opinion_grid()
         self.opinion_grid = self.starting_grid.copy()
@@ -91,8 +91,8 @@ class CA(object):
                         random_number = np.random.rand(1)
                         grid[x_idx, y_idx] = 1 if random_number < self.p_opinion else -1
         
-        # Add leader in center with opinion 1
-        grid[center_x, center_y] = 1
+        # Add leader in center with opinion -1
+        grid[center_x, center_y] = -1
 
         return grid
 
