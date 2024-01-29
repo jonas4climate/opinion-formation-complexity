@@ -9,7 +9,7 @@ from matplotlib.animation import FuncAnimation
 logging.basicConfig(level=logging.WARNING)
 
 
-def distance_metric(node_1, node_2, type='euclidean'):
+def grid_distance_metric(node_1, node_2, type='euclidean'):
     x0, y0 = node_1
     x1, y1 = node_2
     if type == 'euclidean':
@@ -49,7 +49,7 @@ def g(distance_ij, type='linear', c=1):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform'):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -62,53 +62,80 @@ class Network(object):
         self.s_leader = s_leader
 
         # Functions passed
-        self.d = lambda node_1, node_2: distance_metric(
+        self.d = lambda node_1, node_2: grid_distance_metric(
             node_1, node_2, type=dist_func)
         self.g = lambda d: g(d, type=dist_scaling_func, c=dist_scaling_factor)
         self.q = lambda mean: prob_dist_s_people(mean, type=s_prob_dist_func)
 
         # Network itself
-        self.G = self.__initialize_network()
+        self.G = self.__initialize_network(type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist)
         self.N = self.G.number_of_nodes()
 
-    def __initialize_network(self):
+    def __initialize_network(self, type='grid', ba_m=4, neighbor_dist=1):
         """
         Initialize network based on initial parameter values
         """
 
         # Create 2D grid graph
-        G = nx.grid_2d_graph(self.gridsize_x, self.gridsize_y)
+        if type == 'grid':
+            G = nx.grid_2d_graph(self.gridsize_x, self.gridsize_y)
 
-        # Remove nodes outside of radius R
-        # assert if center_node has more than 1 value?
-        center_node = nx.center(G)[0]
-        R = self.gridsize_x / 2
-        nodes_to_remove = [
-            node for node in G.nodes() if self.d(center_node, node) > R]
-        G.remove_nodes_from(nodes_to_remove)
+            # Remove nodes outside of radius R
+            center_node = nx.center(G)[0]
+            R = self.gridsize_x / 2
+            nodes_to_remove = [
+                node for node in G.nodes() if self.d(center_node, node) > R]
+            G.remove_nodes_from(nodes_to_remove)
 
-        # Create edges between all nodes with attribute distance (shortest path length seen from full grid)
-        nodes = list(G.nodes())
-        for source in nodes:
-            for target in nodes:
-                if source != target:
-                    distance = sum(abs(source[i] - target[i])
-                                   for i in range(2))
-                    G.add_edge(source, target, distance=distance)
+            # Create edges between all nodes with attribute distance (shortest path length seen from full grid)
+            nodes = list(G.nodes())
+            for source in nodes:
+                for neighbor in nodes:
+                    if source != neighbor:
+                        distance = sum(abs(source[i] - neighbor[i])
+                                    for i in range(2))
+                        G.add_edge(source, neighbor, distance=distance)
 
-        # Remove nodes with probability (1-p)
-        p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
-        nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
-                           for y, value in enumerate(row) if value > self.p_occupation]
-        G.remove_nodes_from(nodes_to_remove)
+            # Remove nodes with probability (1-p)
+            p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
+            nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
+                            for y, value in enumerate(row) if value > self.p_occupation]
+            G.remove_nodes_from(nodes_to_remove)
 
-        # Ensure the leader is present in the graph
-        self.__ensure_leader(G, center_node)
+            # Ensure the leader is present in the graph
+            self.__ensure_leader(G, center_node)
 
-        # Initialize attributes of the graph
-        self.__initialize_attributes(G, center_node)
+            # Initialize attributes of the graph
+            self.__initialize_attributes(G, center_node)
 
-        return G
+            return G
+        
+        elif type == 'barabasi-albert':
+            R = self.gridsize_x / 2
+            # TODO: check if accurate
+            N_in_circle = sum(1 for x in range(self.gridsize_x)
+                    for y in range(self.gridsize_y) if self.d((x, y), (R, R)) <= R)
+            N = int(N_in_circle * self.p_occupation)
+            warning(f'Assuming number of nodes is counted accurately as {N}.')
+            G = nx.barabasi_albert_graph(N, m=ba_m)
+            info(f'Created Barabasi-Albert graph with N={N} and m={ba_m}.')
+
+            # Assume this is the leader because its the most connected node?
+            leader_node = max(G.degree, key=lambda x: x[1])[0]
+
+            nodes = list(G.nodes())
+            for source in nodes:
+                for neighbor in G[source]:
+                    distance = 1 # TODO: tweak to not always make it 1 but the distance in the grid (additional for loop for neighbor of neighbors?)
+                    G.add_edge(source, neighbor, distance=distance)
+
+            # Leader is always in the "center" as there is a central hub for BA graphs, so no need to ensure leader is present
+                    
+            # Initialize attributes of the graph
+            self.__initialize_attributes(G, leader_node)
+
+            return G
+            
 
     def __ensure_leader(self, G, center_node):
         """
