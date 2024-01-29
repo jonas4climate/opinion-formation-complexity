@@ -47,7 +47,7 @@ def g(distance_ij, type = 'linear', c = 1):
 
 class CA(object):
 
-    def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_occupation, p_opinion_1, influence_leader, influence_people_mean, distance_func=euclidean_distance, influence_prob_dist_func=prob_dist_influence_people):
+    def __init__(self, gridsize_x, gridsize_y, temperature, beta_leader, beta_people, h, p_occupation, p_opinion_1, influence_leader, influence_people_mean, distance_func=euclidean_distance, influence_prob_dist_func='uniform', distance_scaling_func='linear'):
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.temp = temperature
         self.beta = beta_people
@@ -57,7 +57,8 @@ class CA(object):
         self.p_opinion = p_opinion_1
         self.s_l = influence_leader 
         self.s_mean = influence_people_mean
-        self.q = influence_prob_dist_func
+        self.q = lambda mean: prob_dist_influence_people(mean, distribution_type=influence_prob_dist_func)
+        self.g = lambda d: g(d, type=distance_scaling_func)
         self.d = distance_func
         self.starting_grid = self.__gen_initial_opinion_grid()
         self.opinion_grid = self.starting_grid.copy()
@@ -247,7 +248,7 @@ class CA(object):
                     d_ij = self.distance_matrix[i, j]
 
                     # Compute the function of the distance
-                    g_d_ij = g(d_ij)
+                    g_d_ij = self.g(d_ij)
 
                     summation += (s_j * sigma_i * sigma_j)/(g_d_ij)
 
