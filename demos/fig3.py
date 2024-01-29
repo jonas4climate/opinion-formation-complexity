@@ -12,21 +12,20 @@ TODO: Speed up the simulation (if can)
 """
 
 import numpy as np
-import ca.CA_module as ca
+import demos.ca.cellular_automata as ca
 import matplotlib.pyplot as plt
-from numpy import *
 
 # Parameters
 GRIDSIZE_X,GRIDSIZE_Y = 45,45
 TIMESTEPS = 10
-BETA_PEOPLE = 1
+BETA = 1
 BETA_LEADER = 1
 H = 0
-p = 1
-p_1 = 0
+P_OCCUPATION = 1
+P_OPINION_1 = 0
 
-INFLUENCE_LEADER = 400   
-INFLUENCE_DISTRIBUTION_MEAN = 1
+S_LEADER = 400   
+S_MEAN = 1
 
 
 TEMPERATURE=np.linspace(0,40,10)
@@ -38,7 +37,7 @@ for t in TEMPERATURE:
     Simu_mean_cluster_radius = []
     
     for s in range(simulation_times):
-        model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, t, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=t, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
         data = model.evolve(TIMESTEPS)
         simulation_final = data['opinions'][TIMESTEPS-1]
         #print("final",simulation_final)
@@ -58,14 +57,14 @@ for t in TEMPERATURE:
         a_T = model.mean_cluster_radius()
         Simu_mean_cluster_radius.append(a_T)
     
-    Mean_cluster_radius.append(mean(Simu_mean_cluster_radius))      
+    Mean_cluster_radius.append(np.mean(Simu_mean_cluster_radius))      
 
 print("Mean_cluster_radius",Mean_cluster_radius)
     
 
 # Plotting
 plt.suptitle(' Mean cluster radius a vs. temperature T')
-plt.title(f'S_L={INFLUENCE_LEADER}')
+plt.title(f'S_L={S_LEADER}')
 plt.xlabel('T')
 plt.ylabel('a(T)')
 

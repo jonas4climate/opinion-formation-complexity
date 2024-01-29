@@ -1,73 +1,75 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
-import os.path as path
 from tqdm import tqdm
 import logging
 from logging import warning, error, info, debug
 from matplotlib.animation import FuncAnimation
-from copy import deepcopy
 
 logging.basicConfig(level=logging.WARNING)
 
 
-def euclidean_distance(node_1, node_2):
-    """
-    Returns the euclidean distance between two nodes
-    """
+def distance_metric(node_1, node_2, type='euclidean'):
+    x0, y0 = node_1
+    x1, y1 = node_2
+    if type == 'euclidean':
+        return np.sqrt((x1-x0)**2 + (y1-y0)**2)
+    elif type == 'von_neumann':
+        return abs(x1-x0) + abs(y1-y0)
+    elif type == 'moore':
+        return max(abs(x1-x0), abs(y1-y0))
 
-    x1, y1 = node_1
-    x2, y2 = node_2
-    distance = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    return distance
 
-def prob_dist_influence_people(mean, distribution_type = 'uniform'):
+def prob_dist_s_people(mean, type='uniform'):
 
     # Probability distribution for the node influence
-    if distribution_type == 'uniform':
+    if type == 'uniform':
         return np.random.uniform(0, 2*mean)
 
-    if distribution_type == 'normal':
+    if type == 'normal':
         return np.abs(np.random.normal(mean, scale=1))
 
-    if distribution_type == 'exponential':
+    if type == 'exponential':
         return np.random.exponential(mean)
 
-def g(distance_ij, type = 'linear', c = 1):
+
+def g(distance_ij, type='linear', c=1):
     """
     Define function g based on distance distance_ij and constant c
     """
     if type == 'linear':
         return c * distance_ij
-
-    if type == 'exponential':
+    elif type == 'exponential':
         return c * np.exp(distance_ij)
-
-    if type == 'power':
+    elif type == 'power':
         return distance_ij**c
-
-    if type == 'logarithmic':
+    elif type == 'logarithmic':
         return c * np.log(distance_ij)
 
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion, s_mean, beta_people, temperature, s_l, h, distance_func=euclidean_distance, influence_prob_dist_func='uniform', distance_scaling_func='linear'):
-        self.gridsize_x = gridsize_x
-        self.gridsize_y = gridsize_y
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform'):
+        # Parameters directly provided
+        self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
-        self.p_opinion = p_opinion
-        self.s_mean = s_mean
-        self.beta_people = beta_people
-        self.temperature = temperature
+        self.p_opinion_1 = p_opinion_1
+        self.temp = temp
         self.h = h
-        self.s_l = s_l
-        self.d = distance_func
-        self.g = lambda d: g(d, type=distance_scaling_func)
-        self.q = lambda mean: prob_dist_influence_people(mean, distribution_type=influence_prob_dist_func)
+        self.beta = beta
+        self.beta_leader = beta_leader
+        self.s_mean = s_mean
+        self.s_leader = s_leader
+
+        # Functions passed
+        self.d = lambda node_1, node_2: distance_metric(
+            node_1, node_2, type=dist_func)
+        self.g = lambda d: g(d, type=dist_scaling_func, c=dist_scaling_factor)
+        self.q = lambda mean: prob_dist_s_people(mean, type=s_prob_dist_func)
+
+        # Network itself
         self.G = self.__initialize_network()
         self.N = self.G.number_of_nodes()
-
 
     def __initialize_network(self):
         """
@@ -78,9 +80,11 @@ class Network(object):
         G = nx.grid_2d_graph(self.gridsize_x, self.gridsize_y)
 
         # Remove nodes outside of radius R
-        center_node = nx.center(G)[0]                           #assert if center_node has more than 1 value?
+        # assert if center_node has more than 1 value?
+        center_node = nx.center(G)[0]
         R = self.gridsize_x / 2
-        nodes_to_remove = [node for node in G.nodes() if self.d(center_node, node) > R]
+        nodes_to_remove = [
+            node for node in G.nodes() if self.d(center_node, node) > R]
         G.remove_nodes_from(nodes_to_remove)
 
         # Create edges between all nodes with attribute distance (shortest path length seen from full grid)
@@ -88,12 +92,14 @@ class Network(object):
         for source in nodes:
             for target in nodes:
                 if source != target:
-                    distance = sum(abs(source[i] - target[i]) for i in range(2))
+                    distance = sum(abs(source[i] - target[i])
+                                   for i in range(2))
                     G.add_edge(source, target, distance=distance)
 
         # Remove nodes with probability (1-p)
         p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
-        nodes_to_remove = [(x, y) for x, row in enumerate(p_grid) for y, value in enumerate(row) if value > self.p_occupation]
+        nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
+                           for y, value in enumerate(row) if value > self.p_occupation]
         G.remove_nodes_from(nodes_to_remove)
 
         # Ensure the leader is present in the graph
@@ -103,7 +109,7 @@ class Network(object):
         self.__initialize_attributes(G, center_node)
 
         return G
-    
+
     def __ensure_leader(self, G, center_node):
         """
         Ensures network graph has a leader located at the center of its grid
@@ -116,7 +122,8 @@ class Network(object):
             G.add_node(center_node)
             for other_node in nodes:
                 if other_node != center_node:
-                    distance = sum(abs(other_node[i] - center_node[i]) for i in range(2))
+                    distance = sum(
+                        abs(other_node[i] - center_node[i]) for i in range(2))
                     G.add_edge(other_node, center_node, distance=distance)
 
     def __initialize_attributes(self, G, center_node):
@@ -131,9 +138,10 @@ class Network(object):
         N = G.number_of_nodes()
 
         # Create the attributes for the nodes
-        opinions = np.random.choice([1, -1], size=N, p=[self.p_opinion, 1-self.p_opinion])
+        opinions = np.random.choice(
+            [1, -1], size=N, p=[self.p_opinion_1, 1-self.p_opinion_1])
         influences = self.__get_node_influences(N)
-        betas = [self.beta_people] * N
+        betas = [self.beta] * N
         impacts = np.zeros(N)
 
         # Assign attributes directly to nodes
@@ -144,9 +152,8 @@ class Network(object):
             G.nodes[node]['impact'] = impact
 
         # Adjust leader influence
-        G.nodes[center_node]['influence'] = self.s_l
+        G.nodes[center_node]['influence'] = self.s_leader
         G.nodes[center_node]['opinion'] = -1
-
 
     def __get_node_influences(self, N):
         """
@@ -157,7 +164,6 @@ class Network(object):
         for i in range(N):
             node_influences[i] = self.q(self.s_mean)
         return node_influences
-
 
     def __get_impact(self, target_node, G_copy):
         """
@@ -185,17 +191,17 @@ class Network(object):
         """
         Update node opinion sigma_i following the model formula
         """
-        if self.temperature == 0:
+        if self.temp == 0:
             new_opinion = -np.sign(impact * sigma_i)
             if new_opinion != sigma_i:
                 info(f"Opinion change: {sigma_i} -> {new_opinion}")
         else:
-            probability_staying = np.exp(-impact / self.temperature) / (np.exp(-impact / self.temperature) + np.exp(impact / self.temperature))
+            probability_staying = np.exp(-impact / self.temp) / (
+                np.exp(-impact / self.temp) + np.exp(impact / self.temp))
             opinion_change = probability_staying < np.random.rand()
             new_opinion = -sigma_i if opinion_change else sigma_i
 
         return new_opinion
-
 
     def update_network(self):
         """
@@ -222,90 +228,76 @@ class Network(object):
             new_opinion = self.__update_opinion(sigma_i, impact)
             self.G.nodes[node]['opinion'] = new_opinion
 
-
     def evolve(self, timesteps):
         """
         Evolve the network graph for timesteps
         """
         opinion_history = np.ndarray((timesteps+1, self.N))
-        opinions = np.array([data['opinion'] for _, data in self.G.nodes(data=True)])
+        opinions = np.array([data['opinion']
+                            for _, data in self.G.nodes(data=True)])
         opinion_history[0] = opinions
 
         for t in tqdm(range(timesteps)):
             self.update_network()
-            opinions = np.array([data['opinion'] for _, data in self.G.nodes(data=True)])
+            opinions = np.array([data['opinion']
+                                for _, data in self.G.nodes(data=True)])
             opinion_history[t+1] = opinions
-        
+
         data = {'opinions': opinion_history}
         return data
-    
+
     def plot_opinion_network_at_time_t(self, data, t, save=False):
         """
         Plot the opinion network graph at timestep t from data returned by `evolve()`
         """
-        plt.figure(figsize=(6,6), layout='tight')
+        plt.figure(figsize=(6, 6), layout='tight')
         opinion_history = data['opinions']
 
         pos = {}
         for n in self.G.nodes:
-            a,b = n
-            pos[n] = np.array([a,b])
+            a, b = n
+            pos[n] = np.array([a, b])
 
-        nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[0], node_size=100, vmin=-1, vmax=1)
+        nx.draw_networkx_nodes(
+            self.G, pos, node_color=opinion_history[0], node_size=100, vmin=-1, vmax=1)
         nx.draw_networkx_edges(self.G, pos, alpha=0.1)
         plt.axis("equal")
         plt.grid(False)
         plt.axis(False)
-        plt.title(f"Opinion network at $t={t}$ ($T={self.temperature}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta_people}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
+        plt.title(
+            f"Opinion network at $t={t}$ ($T={self.temp}$, $s_l={self.s_leader}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})")
         if save:
-            plt.savefig(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_t={t}.png', dpi=300)
+            plt.savefig(
+                f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_t={t}.png', dpi=300)
 
     def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False):
         """
         Plot the evolution of the opinion network graph from data returned by `evolve()`
         """
-        plt.figure(figsize=(6,6), layout='tight')
+        plt.figure(figsize=(6, 6), layout='tight')
         opinion_history = data['opinions']
 
         pos = {}
         for n in self.G.nodes:
-            a,b = n
-            pos[n] = np.array([a,b])
+            a, b = n
+            pos[n] = np.array([a, b])
 
         def update(t):
             plt.clf()
-            nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size=100, vmin=-1, vmax=1)
+            nx.draw_networkx_nodes(
+                self.G, pos, node_color=opinion_history[t], node_size=100, vmin=-1, vmax=1)
             if draw_edges:
                 nx.draw_networkx_edges(self.G, pos, alpha=0.1)
             plt.axis("equal")
             plt.grid(False)
             plt.axis(False)
-            plt.title(f"Opinion network at $t={t}$ ($T={self.temperature}$, $s_l={self.s_l}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta_people}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion})")
+            plt.title(
+                f"Opinion network at $t={t}$ ($T={self.temp}$, $s_l={self.s_leader}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})")
             return plt
 
-        anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
+        anim = FuncAnimation(plt.gcf(), update, frames=range(
+            0, opinion_history.shape[0]), interval=interval)
         if save:
-            anim.save(f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
+            anim.save(
+                f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
 
-def animate_leader_cause_unification():
-    """
-    Animate the opinion network evolution for the case where the leader causes unification
-    """
-    x, y = (21,21)
-    timesteps = 20
-
-    p_occupation = 1
-    p_opinion = 1
-    h = 0
-    s_mean = 1
-    beta = 1
-    temp = 1
-
-    s_l = 150
-
-    # Initialize network
-    network = Network(x, y, p_occupation, p_opinion, s_mean, beta, temp, s_l, h)
-    data = network.evolve(timesteps)
-
-    network.plot_opinion_network_evolution(data, interval=250)
-    plt.show()

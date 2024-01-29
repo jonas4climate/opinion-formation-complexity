@@ -9,7 +9,7 @@ p_overcoming_leader = f(TEMPERATURE)
 
 """
 
-import ca.CA_module as ca
+import demos.ca.cellular_automata as ca
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,7 +20,7 @@ SIMS_PER_T_VALUE = 20
 T_MAX = 200
 
 THRESHOLD = 5 # Maximun leader cluster radius that is not considered opinion overcomming
-INFLUENCE_LEADER = 100             # May need to tweak this to ensure we are on cluster region!
+S_LEADER = 100             # May need to tweak this to ensure we are on cluster region!
 ################################
 
 # Todo this we first get parameters that for T=0
@@ -31,22 +31,22 @@ INFLUENCE_LEADER = 100             # May need to tweak this to ensure we are on 
 GRIDSIZE_X,GRIDSIZE_Y = 21,21
 TIMESTEPS = 10
 #TEMPERATURE = 0
-BETA_PEOPLE = 1
+BETA = 1
 BETA_LEADER = 1
 H = 0
-p = 1
-p_1 = 1 # In this scenario everybody believes the leader at start
+P_OCCUPATION = 1
+P_OPINION_1 = 1 # In this scenario everybody believes the leader at start
 a_0 = 1
 
-INFLUENCE_DISTRIBUTION_MEAN = 1
+S_MEAN = 1
 
 ################################
 
 R = GRIDSIZE_X/2
-S_L_min = ca.minimun_leader_strength(R,BETA_PEOPLE,H)
-S_L_max = ca.maximun_leader_strength(R,BETA_PEOPLE,H)
-cluster_min = ca.a(R,BETA_PEOPLE,H,S_L_min)
-cluster_max = ca.a(R,BETA_PEOPLE,H,S_L_max)
+S_L_min = ca.minimun_leader_strength(R,BETA,H)
+S_L_max = ca.maximun_leader_strength(R,BETA,H)
+cluster_min = ca.a(R,BETA,H,S_L_min)
+cluster_max = ca.a(R,BETA,H,S_L_max)
 xmin,xmax = 0,2*S_L_max
 ymin,ymax = 0,22.5
 
@@ -55,22 +55,22 @@ ymin,ymax = 0,22.5
 
 # Do one simulation test first to ensure that
 # to start with we actually have a cluster to overcome
-TEMPERATURE = 0
+TEMP = 0
 
-model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
 data = model.evolve(TIMESTEPS)
 simulation = data['opinions']
 cluster_sizes = data['cluster_sizes']
 last_cluster = cluster_sizes[-1]
 
 # Do diagram plot to ensure we are in the right region
-fig, ax = ca.plot_diagram(R,BETA_PEOPLE,H)
+fig, ax = ca.plot_diagram(R,BETA,H)
 
-ax.set_xlim([0,2*S_L_max])
-ax.set_ylim([0,int(R)+1])
+ax.set_xlim(0,2*S_L_max)
+ax.set_ylim(0,int(R)+1)
 
 # Plot last cluster
-ax.scatter(INFLUENCE_LEADER,last_cluster)
+ax.scatter(S_LEADER,last_cluster)
 
 # Show
 plt.grid()
@@ -97,12 +97,12 @@ p_overcoming_leader = np.zeros(NUMBER_OF_T_VALUES_TO_TEST)
 
 for index in range(NUMBER_OF_T_VALUES_TO_TEST):
 
-    TEMPERATURE = temperatures[index]
+    TEMP = temperatures[index]
     print(f'Sim {index+1}/{NUMBER_OF_T_VALUES_TO_TEST}')
     leader_overcomed = 0
 
     for sim in range(SIMS_PER_T_VALUE):
-        model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
         data = model.evolve(TIMESTEPS)
         #simulation = data['opinions']
         #cluster_sizes = data['cluster_sizes']

@@ -7,51 +7,46 @@ TODO: Speed up the simulation (if can)
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import ca.CA_module as ca
+import demos.ca.cellular_automata as ca
 
 # Parameters
 GRIDSIZE_X, GRIDSIZE_Y = 55, 55
 TIMESTEPS = 10
-BETA_PEOPLE = 1
+BETA = 1
 BETA_LEADER = 1
 H = 0
-p = 1
-p_1 = 0
+P_OCCUPATION = 1
+P_OPINION_1 = 0
 
 
-INFLUENCE_DISTRIBUTION_MEAN = 1
+S_MEAN = 1
 
-INFLUENCE_LEADER_RANGE = np.linspace(0, 500, 8) 
-TEMPERATURE_RANGE = np.linspace(0, 120, 10) 
+S_LEADER_RANGE = np.linspace(0, 500, 8) 
+TEMP_RANGE = np.linspace(0, 120, 10) 
 
 
 critical_temperatures = []
 
 
-for influence_leader in INFLUENCE_LEADER_RANGE:
+for influence_leader in S_LEADER_RANGE:
     order_parameter = []
-    for temperature in TEMPERATURE_RANGE:
-        
-        model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, temperature, BETA_LEADER, BETA_PEOPLE, H,
-                   p, p_1, influence_leader, INFLUENCE_DISTRIBUTION_MEAN,
-                   ca.euclidean_distance, ca.prob_dist_influence_people)
-
+    for temperature in TEMP_RANGE:
+        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=temperature, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=influence_leader, s_mean=S_MEAN)
         data = model.evolve(TIMESTEPS)
-        
         
         final_opinions = data['opinions'][-1]
         order_param = np.mean(final_opinions == 1) 
         order_parameter.append(order_param)
 
     #Find Critical temperature
-    d_order_param = np.gradient(order_parameter, TEMPERATURE_RANGE)
+    d_order_param = np.gradient(order_parameter, TEMP_RANGE)
     critical_temperature_idx = np.argmax(np.abs(d_order_param))
-    critical_temperature = TEMPERATURE_RANGE[critical_temperature_idx]
+    critical_temperature = TEMP_RANGE[critical_temperature_idx]
     
     critical_temperatures.append(critical_temperature)
 
 # Plotting
-plt.plot(INFLUENCE_LEADER_RANGE, critical_temperatures, marker='o')
+plt.plot(S_LEADER_RANGE, critical_temperatures, marker='o')
 plt.xlabel('Leader Influence Strength')
 plt.ylabel('Critical Temperature')
 plt.title('Critical Temperature vs Leader Influence Strength')
