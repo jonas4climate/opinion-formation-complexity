@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 GRIDSIZE_X,GRIDSIZE_Y = 21,21
 TIMESTEPS = 100
-TEMPERATURE = 20
+TEMPERATURE = 40
 BETA_PEOPLE = 1
 BETA_LEADER = 1
-H = 0
+H = 1
 p = 1
 p_1 = 0
 
