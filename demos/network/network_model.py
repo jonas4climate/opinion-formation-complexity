@@ -21,9 +21,17 @@ def euclidean_distance(node_1, node_2):
     distance = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
     return distance
 
-def prob_dist_influence_people(mean):
+def prob_dist_influence_people(mean, distribution_type = 'uniform'):
+
     # Probability distribution for the node influence
-    return np.random.uniform(0, 2*mean)
+    if distribution_type == 'uniform':
+        return np.random.uniform(0, 2*mean)
+
+    if distribution_type == 'normal':
+        return np.random.normal(2*mean, scale =1)
+
+    if distribution_type == 'exponential':
+        return np.random.exponential(mean)
 
 def g(distance_ij, type = 'linear', c = 1):
     """
