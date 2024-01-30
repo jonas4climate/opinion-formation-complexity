@@ -3,6 +3,7 @@ from math import floor
 from scipy.special import ellipeinc
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from multiprocessing import Pool
 from tqdm import tqdm
 import logging
 from logging import warning, error, info, debug
@@ -465,9 +466,9 @@ def update_basics_diagram(fig, ax):
 def analytical_expect_clusters(r, beta, h, s_l):
     # Ensure both solutions are > 0
 
-    print('First half (2*pi*R-sqrt(pi)+beta-h)^2:',
-          (2*np.pi*r - np.sqrt(np.pi) + beta - h)**2)
-    print('Second half (32*s_l):', 32*s_l)
+    #print('First half (2*pi*R-sqrt(pi)+beta-h)^2:',
+    #      (2*np.pi*r - np.sqrt(np.pi) + beta - h)**2)
+    #print('Second half (32*s_l):', 32*s_l)
 
     condition_1 = bool(
         (2*np.pi*r - np.sqrt(np.pi) + beta - h)**2 - 32*s_l >= 0)
@@ -510,3 +511,70 @@ def minimun_leader_strength(r, beta, h):
 def maximun_leader_strength(r, beta, h):
     # TODO: Add with -beta, but one should be enough
     return (1/32)*(2*np.pi*r - np.sqrt(np.pi) + beta - h)**2
+
+
+
+
+
+def find_critical_temperature(tmin,tmax,timesteps,t_values,sims_per_timestep,threshold,GRIDSIZE_X,GRIDSIZE_Y,BETA_PEOPLE,BETA_LEADER,H,P_OCCUPATION,P_OPINION_1,S_LEADER,a_0,S_MEAN):
+
+    # The function to pass to the pool
+  
+    temperatures = np.linspace(tmin,tmax,t_values)
+    p_overcoming_leader = np.zeros(t_values)
+
+    for T in (range(t_values)):
+        
+        # Retrieve the T
+        TEMP = temperatures[T]
+        leader_overcomed = 0
+        print(f'Sim {T+1}/{t_values}: {TEMP}')
+        
+        for sim in range(sims_per_timestep):
+
+            model = CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA_PEOPLE, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
+            
+            # Evolve one step at a time
+            data = model.evolve(timesteps)
+            #simulation = data['opinions']
+            last_cluster_size = data['cluster_sizes'][-1]
+
+            if last_cluster_size <= threshold:
+                leader_overcomed += 1
+
+
+        # Get prob of ovrcoming leader
+        p_overcoming_leader[T] = leader_overcomed / sims_per_timestep
+
+
+    return temperatures,p_overcoming_leader
+
+
+
+def plot_critical_temperature(temperatures,average_cluster_sizes,xmin,xmax,T_VALUES,R):
+
+    fig,ax = plt.subplots()
+
+    #plt.figure()
+
+    # Max cluster size line
+    x_cons = np.linspace(xmin, xmax, T_VALUES)
+    y_cons = np.ones(T_VALUES)*R
+    ax.plot(x_cons,y_cons,c='black',linestyle='-')
+
+    # Horizontal line with minimun value expected cluster
+
+    # Add threshold used to figure caption!
+
+    ax.plot(temperatures,average_cluster_sizes)
+    ax.set_title('Probability of overcomming leader cluster with temperature')
+    ax.set_xlabel('Temperature')
+    ax.set_ylabel('p(Overcoming leader cluster)')
+    ax.set_xlim([temperatures[0],temperatures[-1]])
+    ax.set_ylim([0,1])
+
+    #plt.grid()
+    #plt.tight_layout()
+    #plt.show()
+
+    return fig,ax
