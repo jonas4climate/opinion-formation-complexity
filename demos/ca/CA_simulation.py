@@ -3,7 +3,8 @@
 
 """
 
-import CA_module as ca
+import demos.ca.cellular_automata as ca
+from demos.ca.cellular_automata import CA
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -15,12 +16,10 @@ TEMPERATURE = 40
 BETA_PEOPLE = 1
 BETA_LEADER = 1
 H = 0
-p = 1
-p_1 = 0
-a_0 = 1 # Size of innitial cluster around leader
-
-INFLUENCE_LEADER = 50   # Leader influence
-INFLUENCE_DISTRIBUTION_MEAN = 1
+P_OCCUPATION = 1
+P_OPINION_1 = 0
+S_LEADER = 50
+S_MEAN = 1
 
 
 
@@ -28,14 +27,16 @@ INFLUENCE_DISTRIBUTION_MEAN = 1
 
 if TEMPERATURE == 0:
     expect_cluster = ca.analytical_expect_clusters(
-        GRIDSIZE_X/2, BETA_PEOPLE, H, INFLUENCE_LEADER)
+        GRIDSIZE_X/2, BETA_PEOPLE, H, S_LEADER)
     print('Expect clusters?', expect_cluster)
 
-model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+model = CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMPERATURE, beta=BETA_PEOPLE, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
 data = model.evolve(5)
 
 model.reset()
 data = model.evolve(TIMESTEPS)
+simulation = data['opinions']
+cluster_sizes = data['cluster_sizes']
 model.plot_opinion_grid_at_time_t(data, 10)
 plt.show(block=True)
 
@@ -76,7 +77,7 @@ for time_step in range(TIMESTEPS):
     #    x, y = int(node_coordinates[n, 0]), int(node_coordinates[n, 1])
     #    text = ax.text(
     #        y, x, str(int(grid_t[x, y])), ha="center", va="center", color="w",fontsize=4)
-    ax.set_title(f'Frame:{(time_step+1)}/{TIMESTEPS},\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={INFLUENCE_LEADER},c_radius={int(cluster_size)}')
+    ax.set_title(f'Frame:{(time_step+1)}/{TIMESTEPS},\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={S_LEADER},c_radius={int(cluster_size)}')
     
     
     plt.tight_layout()
@@ -125,7 +126,7 @@ for time_step in range(TIMESTEPS):
 
     # Vertical line
     x = np.linspace(S_L_min, S_L_max, 100)
-    ax.vlines(x=S_L_min, ymin=0, ymax=cluster_min[0], colors='gray', ls='dotted', lw=1)
+    ax.vlines(x=S_L_min, ymin=0, ymax=cluster_min[0], colors=['gray'], ls='dotted', lw=1)
 
     # Complete consensus line
     x_cons = np.linspace(xmin, xmax, 100)
@@ -137,17 +138,17 @@ for time_step in range(TIMESTEPS):
     ax.set_ylabel('a')
     ax.set_xlabel('S_L')
 
-    ax.set_xlim([xmin,xmax])
-    ax.set_ylim([ymin,ymax])
+    ax.set_xlim(xmin,xmax)
+    ax.set_ylim(ymin,ymax)
 
     # Current leader influence!!!
     
-    ax.vlines(x=INFLUENCE_LEADER, ymin=0, ymax=ymax, colors='gray', ls='dashed', lw=1)
+    ax.vlines(x=S_LEADER, ymin=0, ymax=ymax, colors=['gray'], ls='dashed', lw=1)
 
 
     # Current cluster !!!!!
     cluster_size = cluster_sizes[time_step]
-    ax.scatter(INFLUENCE_LEADER,cluster_size)
+    ax.scatter(S_LEADER,cluster_size)
     
     
     plt.grid()

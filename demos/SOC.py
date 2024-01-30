@@ -2,7 +2,7 @@
 PSEUDOCODE TO OBTAIN POWER LAW OUT OF THE CA
 """
 
-import ca.CA_module as ca
+import ca.cellular_automata as ca
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -19,11 +19,11 @@ critical_temperature = 40
 GRIDSIZE_X,GRIDSIZE_Y = 21,21
 TIMESTEPS = 50
 #TEMPERATURE = 0
-BETA_PEOPLE = 1
+BETA = 1
 BETA_LEADER = 1
 H = 0
-p = 1
-p_1 = 1 # In this scenario everybody believes the leader at start
+P_OCCUPATION = 1
+P_OPINION_1 = 1 # In this scenario everybody believes the leader at start
 
 INFLUENCE_LEADER = 100             # The one 
 a_0 = 1
@@ -32,10 +32,13 @@ INFLUENCE_DISTRIBUTION_MEAN = 1
 
 # Step 3 - Simulate system at this critical temperature
 temperature = critical_temperature
-model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, temperature, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=temperature, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=INFLUENCE_LEADER, s_mean=INFLUENCE_DISTRIBUTION_MEAN)
 data = model.evolve(TIMESTEPS)
 
 # Step 4 - Plot opinion change to see if clusters do form
+for t in range(TIMESTEPS):
+    model.plot_opinion_grid_at_time_t(data, T)
+
 
 # Step 5 - Get cluster sizes from simulation
 R = GRIDSIZE_X/2
@@ -43,6 +46,7 @@ possible_cluster_sizes = R # As many elements as possible cluster radius: 1,2...
 cluster_sizes = np.zeros(R)
 
 # Step 6 - Plot them to see if their sizes follow power law
+
 
 # Step 7 - Verify it with the package powerlaw
 

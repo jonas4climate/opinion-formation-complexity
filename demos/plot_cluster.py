@@ -3,7 +3,7 @@ Plots graph 1 of paper analitically
 """
 
 import numpy as np
-import ca.CA_module as ca
+import demos.ca.cellular_automata as ca
 import matplotlib.pyplot as plt
 
 R = 41/2 #5/2

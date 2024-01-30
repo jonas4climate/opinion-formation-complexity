@@ -14,32 +14,32 @@ above which we can overcome the leader infuence
 ################################
 
 import numpy as np
-import ca.CA_module as ca
+import demos.ca.cellular_automata as ca
 import matplotlib.pyplot as plt
 
 ################################
 
 GRIDSIZE_X,GRIDSIZE_Y = 15,15
 TIMESTEPS = 30
-TEMPERATURE = 0
-BETA_PEOPLE = 1
+TEMP = 0
+BETA = 1
 BETA_LEADER = 1
 H = 0
-p = 1
-p_1 = 0
+P_OCCUPATION = 1
+P_OPINION_1 = 0
 #a_0 = 1 # Size of innitial cluster around leader
 
-INFLUENCE_LEADER = 50   # Leader influence
-INFLUENCE_DISTRIBUTION_MEAN = 1
+S_LEADER = 50   # Leader influence
+S_MEAN = 1
 
 ################################
 
-if TEMPERATURE == 0:
+if TEMP == 0:
     expect_cluster = ca.analytical_expect_clusters(
-        GRIDSIZE_X/2, BETA_PEOPLE, H, INFLUENCE_LEADER)
+        GRIDSIZE_X/2, BETA, H, S_LEADER)
     print('Expect clusters?', expect_cluster)
 
-model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
 data = model.evolve(TIMESTEPS)
 simulation = data['opinions']
 cluster_sizes = data['cluster_sizes']
@@ -48,19 +48,19 @@ cluster_sizes = data['cluster_sizes']
 # Plot it
 plt.figure()
 plt.imshow(model.starting_grid, cmap='seismic',interpolation='nearest', vmin=-1, vmax=1)
-plt.title(f'Start,\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={INFLUENCE_LEADER},c_radius={int(cluster_sizes[0])}')
+plt.title(f'Start,\n T={TEMP}, H={H}, B={BETA}, Bl={BETA_LEADER}, sL={S_LEADER},c_radius={int(cluster_sizes[0])}')
 plt.tight_layout()
 plt.show()
 
 # Plot diagram to ensure we are within parabola!
 
-fig, ax = ca.plot_diagram(GRIDSIZE_X/2,BETA_PEOPLE,H)
+fig, ax = ca.plot_diagram(GRIDSIZE_X/2,BETA,H)
 
 R = GRIDSIZE_X/2
-S_L_min = ca.minimun_leader_strength(R,BETA_PEOPLE,H)
-S_L_max = ca.maximun_leader_strength(R,BETA_PEOPLE,H)
-cluster_min = ca.a(R,BETA_PEOPLE,H,S_L_min)
-cluster_max = ca.a(R,BETA_PEOPLE,H,S_L_max)
+S_L_min = ca.minimun_leader_strength(R,BETA,H)
+S_L_max = ca.maximun_leader_strength(R,BETA,H)
+cluster_min = ca.a(R,BETA,H,S_L_min)
+cluster_max = ca.a(R,BETA,H,S_L_max)
 xmin,xmax = 0,2*S_L_max
 ymin,ymax = 0,22.5
 
@@ -84,17 +84,17 @@ for time_step in range(1):#range(TIMESTEPS):
 
     # Parabola top arm
     x = np.linspace(0, S_L_max, 100)
-    y = ca.a_positive(R,BETA_PEOPLE,H,x)
+    y = ca.a_positive(R,BETA,H,x)
     ax.plot(x,y,c='black',linestyle='--')
 
     # Parabola under arm
     x = np.linspace(S_L_min, S_L_max, 100)
-    y2 = ca.a_negative(R,BETA_PEOPLE,H,x)
+    y2 = ca.a_negative(R,BETA,H,x)
     ax.plot(x,y2,c='black',linestyle='--')
 
     # Vertical line
     x = np.linspace(S_L_min, S_L_max, 100)
-    ax.vlines(x=S_L_min, ymin=0, ymax=cluster_min[0], colors='gray', ls='dotted', lw=1)
+    ax.vlines(x=S_L_min, ymin=0, ymax=cluster_min[0], colors=['gray'], ls='dotted', lw=1)
 
     # Complete consensus line
     x_cons = np.linspace(xmin, xmax, 100)
@@ -102,21 +102,21 @@ for time_step in range(1):#range(TIMESTEPS):
     ax.plot(x_cons,y_cons,c='black',linestyle='-')
 
     # Title
-    ax.set_title(f'Frame:{(time_step+1)}/{TIMESTEPS}, R={R}, Beta={BETA_PEOPLE}, H={H}')
+    ax.set_title(f'Frame:{(time_step+1)}/{TIMESTEPS}, R={R}, Beta={BETA}, H={H}')
     ax.set_ylabel('a')
     ax.set_xlabel('S_L')
 
-    ax.set_xlim([xmin,xmax])
-    ax.set_ylim([ymin,ymax])
+    ax.set_xlim(xmin,xmax)
+    ax.set_ylim(ymin,ymax)
 
     # Current leader influence!!!
     
-    ax.vlines(x=INFLUENCE_LEADER, ymin=0, ymax=ymax, colors='gray', ls='dashed', lw=1)
+    ax.vlines(x=S_LEADER, ymin=0, ymax=ymax, colors=['gray'], ls='dashed', lw=1)
 
 
     # Current cluster !!!!!
     
-    ax.scatter(INFLUENCE_LEADER,cluster_size)
+    ax.scatter(S_LEADER,cluster_size)
     
     
     plt.grid()
@@ -159,15 +159,17 @@ for T in range(NUMBER_OF_TEMPERATURE_VALUES_TO_TEST):
 
 
     # Retrieve the T
-    TEMPERATURE = temperatures[T]
+    TEMP = temperatures[T]
 
-    print(f'Temperature {T+1}/{NUMBER_OF_TEMPERATURE_VALUES_TO_TEST}: {TEMPERATURE}')
+    print(f'Temperature {T+1}/{NUMBER_OF_TEMPERATURE_VALUES_TO_TEST}: {TEMP}')
 
 
     # Do many simulations with that T to get av. cluster size
     for sim in range(NUMBER_OF_SIMS_PER_TEMPERATURE_VALUE):
 
-        model = ca.CA(GRIDSIZE_X, GRIDSIZE_Y, TEMPERATURE, BETA_LEADER, BETA_PEOPLE, H, p, p_1, INFLUENCE_LEADER, INFLUENCE_DISTRIBUTION_MEAN, ca.euclidean_distance, ca.prob_dist_influence_people)
+        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP,
+                beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION,
+                p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
         data = model.evolve(TIMESTEPS)
         simulation = data['opinions']
         cluster_sizes = data['cluster_sizes']
@@ -184,7 +186,7 @@ for T in range(NUMBER_OF_TEMPERATURE_VALUES_TO_TEST):
 # Plot it
 plt.figure()
 plt.imshow(model.opinion_grid, cmap='seismic',interpolation='nearest', vmin=-1, vmax=1)
-plt.title(f'End,\n T={TEMPERATURE}, H={H}, B={BETA_PEOPLE}, Bl={BETA_LEADER}, sL={INFLUENCE_LEADER},c_radius={int(average_cluster_sizes[T])}')
+plt.title(f'End,\n T={TEMP}, H={H}, B={BETA}, Bl={BETA_LEADER}, sL={S_LEADER},c_radius={int(average_cluster_sizes[T])}')
 plt.tight_layout()
 plt.show()
 
