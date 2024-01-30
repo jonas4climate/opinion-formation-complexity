@@ -19,7 +19,7 @@ import pandas as pd
 
 # Parameters
 GRIDSIZE_X,GRIDSIZE_Y = 45,45
-TIMESTEPS = 10
+TIMESTEPS = 20
 BETA = 1
 BETA_LEADER = 1
 H = 0
@@ -29,11 +29,11 @@ P_OPINION_1 = 0
 S_LEADER = 400   
 S_MEAN = 1
 
-T_MAX = 40
+T_MAX = 100
 STEPSIZE = 5
 
 TEMPERATURES= np.arange(0, T_MAX+STEPSIZE, STEPSIZE)
-N_SIMS = 10    # Run times
+N_SIMS = 15    # Run times
 mean_cluster_radii = []
 std_cluster_radii = []
 
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     # Plotting
     plt.suptitle(' Mean cluster radius a vs. temperature T')
-    plt.title(f'S_L={S_LEADER},simulation={N_SIMS},GRIDSIZE={GRIDSIZE_X},H={H}')
+    plt.title(f'S_L={S_LEADER},simulation={N_SIMS},GRIDSIZE={GRIDSIZE_X},H={H},TIMESTEPS={TIMESTEPS}')
     plt.xlabel('T')
     plt.ylabel('a(T)')
 

@@ -59,7 +59,7 @@ def leader_degree(leader_degree, avg_degree, c=2):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1, init_using_ca=None):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -80,16 +80,16 @@ class Network(object):
         self.q = lambda mean: prob_dist_s_people(mean, type=s_prob_dist_func)
 
         # Network itself
-        self.G = self.__initialize_network(type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist)
+        self.G = self.__initialize_network(grid_type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist, init_using_ca=init_using_ca)
         self.N = self.G.number_of_nodes()
 
-    def __initialize_network(self, type='grid', ba_m=4, neighbor_dist=1):
+    def __initialize_network(self, grid_type='grid', ba_m=4, neighbor_dist=1, init_using_ca=None):
         """
         Initialize network based on initial parameter values
         """
 
         # Create 2D grid graph
-        if type == 'grid':
+        if grid_type == 'grid':
             G = nx.grid_2d_graph(self.gridsize_x, self.gridsize_y)
 
             # Remove nodes outside of radius R
@@ -104,25 +104,30 @@ class Network(object):
             for source in nodes:
                 for neighbor in nodes:
                     if source != neighbor:
-                        distance = sum(abs(source[i] - neighbor[i])
-                                    for i in range(2))
+                        distance = self.d(source, neighbor)
                         G.add_edge(source, neighbor, distance=distance)
 
-            # Remove nodes with probability (1-p)
-            p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
-            nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
-                            for y, value in enumerate(row) if value > self.p_occupation]
-            G.remove_nodes_from(nodes_to_remove)
+            
+            if init_using_ca is not None:
+                ca = init_using_ca
+                nodes_to_remove = [node for node in G.nodes() if node not in ca.node_coords]
+                G.remove_nodes_from(nodes_to_remove)
+            else:
+                # Remove nodes with probability (1-p)
+                p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
+                nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
+                                for y, value in enumerate(row) if value > self.p_occupation]
+                G.remove_nodes_from(nodes_to_remove)
 
             # Ensure the leader is present in the graph
             self.__ensure_leader(G, center_node)
 
             # Initialize attributes of the graph
-            self.__initialize_attributes(G, center_node)
+            self.__initialize_attributes(G, center_node, init_using_ca=init_using_ca)
 
             return G
         
-        elif type == 'barabasi-albert':
+        elif grid_type == 'barabasi-albert':
             R = self.gridsize_x / 2
             N_in_circle = sum(1 for x in range(self.gridsize_x)
                     for y in range(self.gridsize_y) if self.d((x, y), (R, R)) <= R)
@@ -169,7 +174,7 @@ class Network(object):
             # Leader is always in the "center" as there is a central hub for BA graphs, so no need to ensure leader is present
                     
             # Initialize attributes of the graph
-            self.__initialize_attributes(G, leader_node)
+            self.__initialize_attributes(G, leader_node, init_using_ca=init_using_ca)
 
             return G
             
@@ -190,7 +195,7 @@ class Network(object):
                         abs(other_node[i] - center_node[i]) for i in range(2))
                     G.add_edge(other_node, center_node, distance=distance)
 
-    def __initialize_attributes(self, G, center_node):
+    def __initialize_attributes(self, G, center_node, init_using_ca=None):
         """
         Initialize the attributes of each node in network graph.
 
@@ -202,8 +207,12 @@ class Network(object):
         N = G.number_of_nodes()
 
         # Create the attributes for the nodes
-        opinions = np.random.choice(
-            [1, -1], size=N, p=[self.p_opinion_1, 1-self.p_opinion_1])
+        if init_using_ca is not None:
+            ca = init_using_ca
+            opinions = [int(ca.starting_grid[int(i), int(j)]) for i, j in ca.node_coords]
+        else:
+            opinions = np.random.choice(
+                [1, -1], size=N, p=[self.p_opinion_1, 1-self.p_opinion_1])
         influences = self.__get_node_influences(N)
         betas = [self.beta] * N
         impacts = np.zeros(N)
@@ -217,7 +226,7 @@ class Network(object):
 
         # Adjust leader influence
         G.nodes[center_node]['influence'] = self.s_leader
-        G.nodes[center_node]['opinion'] = -1
+        G.nodes[center_node]['opinion'] = 1
 
     def __get_node_influences(self, N):
         """
@@ -334,7 +343,7 @@ class Network(object):
             plt.savefig(
                 f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_t={t}.png', dpi=300)
 
-    def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False):
+    def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False, filename=None):
         """
         Plot the evolution of the opinion network graph from data returned by `evolve()`
         """
@@ -386,6 +395,6 @@ class Network(object):
         anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
 
         if save:
-            anim.save(
-                f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
+            filename = f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4' if filename is None else f'figures/{filename}.mp4'
+            anim.save(f'{filename}', dpi=300)
 
