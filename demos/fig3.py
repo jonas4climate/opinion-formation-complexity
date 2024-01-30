@@ -15,6 +15,7 @@ import ca.cellular_automata as ca
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 from tqdm import tqdm
+import pandas as pd
 
 # Parameters
 GRIDSIZE_X,GRIDSIZE_Y = 45,45
@@ -57,6 +58,30 @@ if __name__ == '__main__':
             std_cluster_radii.append(std)
             pbar.update(N_SIMS)     
             print("Mean_cluster_radius",mean_cluster_radii)
+            
+    
+
+    # Create DataFrame to collect datas
+    results_df = pd.DataFrame({
+        'Temperature': TEMPERATURES,
+        'Mean Cluster Radius': mean_cluster_radii,
+        'Standard Deviation': std_cluster_radii,
+        'Grid Size X': GRIDSIZE_X,
+        'Grid Size Y': GRIDSIZE_Y,
+        'Time Steps': TIMESTEPS,
+        'Beta': BETA,
+        'Beta Leader': BETA_LEADER,
+        'H': H,
+        'P Occupation': P_OCCUPATION,
+        'P Opinion 1': P_OPINION_1,
+        'S Leader': S_LEADER,
+        'S Mean': S_MEAN,
+        'T Max': T_MAX,
+        'N Simulations': N_SIMS
+    })
+
+    # Save datas
+    results_df.to_csv('data/fig3_results.csv', index=False)
 
 
     # Plotting
@@ -65,10 +90,10 @@ if __name__ == '__main__':
     plt.xlabel('T')
     plt.ylabel('a(T)')
 
-    xmin,xmax = 0,T_MAX
-    # ymin,ymax = 0,10
+    xmin,xmax = 0,8
+    ymin,ymax = 0,10
     plt.xlim([xmin,xmax])
-    # plt.ylim([ymin,ymax])
+    plt.ylim([ymin,ymax])
     plt.plot(TEMPERATURES,mean_cluster_radii,marker="o")
     plt.fill_between(TEMPERATURES, np.array(mean_cluster_radii)-np.array(std_cluster_radii), np.array(mean_cluster_radii)+np.array(std_cluster_radii), alpha=0.3)
     plt.grid()
