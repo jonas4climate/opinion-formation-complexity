@@ -210,7 +210,7 @@ class Network(object):
 
         # Adjust leader influence
         G.nodes[center_node]['influence'] = self.s_leader
-        G.nodes[center_node]['opinion'] = -1
+        G.nodes[center_node]['opinion'] = 1
 
     def __get_node_influences(self, N):
         """
