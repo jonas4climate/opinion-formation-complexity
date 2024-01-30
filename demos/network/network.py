@@ -46,10 +46,13 @@ def g(distance_ij, type='linear', c=1):
     elif type == 'logarithmic':
         return c * np.log(distance_ij)
 
+def leader_degree(avg_degree, c=2):
+    return avg_degree * c
+
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, show_tqdm=True):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -70,6 +73,9 @@ class Network(object):
         # Network itself
         self.G = self.__initialize_network(type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist)
         self.N = self.G.number_of_nodes()
+
+        # Extra
+        self.show_tqdm = show_tqdm
 
     def __initialize_network(self, type='grid', ba_m=4, neighbor_dist=1):
         """
@@ -112,10 +118,10 @@ class Network(object):
         
         elif type == 'barabasi-albert':
             R = self.gridsize_x / 2
-            # TODO: check if accurate
             N_in_circle = sum(1 for x in range(self.gridsize_x)
                     for y in range(self.gridsize_y) if self.d((x, y), (R, R)) <= R)
             N = int(N_in_circle * self.p_occupation)
+
             warning(f'Assuming number of nodes is counted accurately as {N}.')
             G = nx.barabasi_albert_graph(N, m=ba_m)
             info(f'Created Barabasi-Albert graph with N={N} and m={ba_m}.')
@@ -123,10 +129,32 @@ class Network(object):
             # Assume this is the leader because its the most connected node?
             leader_node = max(G.degree, key=lambda x: x[1])[0]
 
+            # # Alternative if we want to tweak the influence of the leader with a factor relative to average degree
+            #
+            # # Generate the average degree of all nodes in the network
+            # degrees = G.degree()
+            # sum_edges = sum(degrees.values())
+            # avg_degree = sum_edges / len(degrees)
+            #
+            # # Calculate the desired amount of degrees of leader node
+            # leader_degree_final = leader_degree(avg_degree, 2)
+            # leader_degree_current = G.degree(leader_node)
+            # edges_to_add = leader_degree_final - leader_degree_current
+            #
+            # # Adding the extra edges
+            # for _ in range(edges_to_add):
+            #     # Choose a random node to connect to
+            #     target = np.random.choice(list(G.nodes - {leader_node}))
+            #
+            #     if not G.has_edge(leader_node, target):
+            #         G.add_edge(leader_node, target)
+
             nodes = list(G.nodes())
             for source in nodes:
                 for neighbor in G[source]:
                     distance = 1 # TODO: tweak to not always make it 1 but the distance in the grid (additional for loop for neighbor of neighbors?)
+
+                    #If we do this, how do we still measure connectivity? Because still a node is connceted
                     G.add_edge(source, neighbor, distance=distance)
 
             # Leader is always in the "center" as there is a central hub for BA graphs, so no need to ensure leader is present
@@ -135,6 +163,8 @@ class Network(object):
             self.__initialize_attributes(G, leader_node)
 
             return G
+        else:
+            error(f'Network type {type} not supported.')
             
 
     def __ensure_leader(self, G, center_node):
@@ -202,14 +232,14 @@ class Network(object):
         beta = G_copy.nodes[target_node]['beta']
 
         summation = 0
-        for neighbor in G_copy.nodes:
-            if neighbor != target_node:
-                sigma_j = G_copy.nodes[neighbor]['opinion']
-                s_j = G_copy.nodes[neighbor]['influence']
-                d_ij = G_copy[target_node][neighbor]['distance']
+        neighbors = list(G_copy.neighbors(target_node))
+        for neighbor in neighbors:
+            sigma_j = G_copy.nodes[neighbor]['opinion']
+            s_j = G_copy.nodes[neighbor]['influence']
+            d_ij = G_copy[target_node][neighbor]['distance']
 
-                g_d_ij = self.g(d_ij)
-                summation += (s_j * sigma_i * sigma_j) / (g_d_ij)
+            g_d_ij = self.g(d_ij)
+            summation += (s_j * sigma_i * sigma_j) / (g_d_ij)
 
         impact = -s_i * beta - sigma_i * self.h - summation
         return impact
@@ -264,7 +294,8 @@ class Network(object):
                             for _, data in self.G.nodes(data=True)])
         opinion_history[0] = opinions
 
-        for t in tqdm(range(timesteps)):
+        timesteps_iter = tqdm(range(timesteps)) if self.show_tqdm else range(timesteps)
+        for t in timesteps_iter:
             self.update_network()
             opinions = np.array([data['opinion']
                                 for _, data in self.G.nodes(data=True)])
