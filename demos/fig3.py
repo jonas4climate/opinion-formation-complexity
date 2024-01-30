@@ -10,10 +10,11 @@ Caution: Just focus on the gird of final timestep
 TODO: Still need to be tested for the optimum parameter
 TODO: Speed up the simulation (if can)
 """
-
 import numpy as np
-import demos.ca.cellular_automata as ca
+import ca.cellular_automata as ca
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
+from tqdm import tqdm
 
 # Parameters
 GRIDSIZE_X,GRIDSIZE_Y = 45,45
@@ -27,54 +28,45 @@ P_OPINION_1 = 0
 S_LEADER = 400   
 S_MEAN = 1
 
+T_MAX = 40
 
-TEMPERATURE=np.linspace(0,40,10)
-SIMULATION_TIMES = 10    # Run times
+
+TEMPERATURES=np.linspace(0,T_MAX,10)
+N_SIMS = 10    # Run times
 Mean_cluster_radius = []
 
+def simulate_single_run(t):
+    model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=t, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN, show_tqdm=False)
+    data = model.evolve(TIMESTEPS)
+    simulation_final = data['opinions'][TIMESTEPS-1]
+    a_T = model.mean_cluster_radius()
+    return a_T
 
-for t in TEMPERATURE:
-    Simu_mean_cluster_radius = []
-    
-    for s in range(SIMULATION_TIMES):
-        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=t, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
-        data = model.evolve(TIMESTEPS)
-        simulation_final = data['opinions'][TIMESTEPS-1]
-        #print("final",simulation_final)
-        
-        #########plot the grid of final timestep
-        # fig, ax = plt.subplots()
-        # im = ax.imshow(simulation_final, cmap='seismic',
-        #            interpolation='nearest', vmin=-1, vmax=1)
-    
-        
-        # plt.tight_layout()
-        # plt.show(block=False)
-        # plt.pause(0.2)
-        # ax.clear()
-        #########
-        
-        a_T = model.mean_cluster_radius()
-        Simu_mean_cluster_radius.append(a_T)
-    
-    Mean_cluster_radius.append(np.mean(Simu_mean_cluster_radius))      
+# If main process and not pool processes
+if __name__ == '__main__':
 
-print("Mean_cluster_radius",Mean_cluster_radius)
-    
+    with Pool() as pool:
+        pbar = tqdm(TEMPERATURES, total=len(TEMPERATURES)*N_SIMS, desc="Running simulation in batches", unit='sim')
+        for t in pbar:
+            a_Ts = pool.map(simulate_single_run, [t]*N_SIMS)
+            Mean_cluster_radius.append(np.mean(a_Ts)) 
+            pbar.update(N_SIMS)     
+        print("Mean_cluster_radius",Mean_cluster_radius)
 
-# Plotting
-plt.suptitle(' Mean cluster radius a vs. temperature T')
-plt.title(f'S_L={S_LEADER},simulation={SIMULATION_TIMES},GRIDSIZE={GRIDSIZE_X},H={H}')
-plt.xlabel('T')
-plt.ylabel('a(T)')
 
-xmin,xmax = 0,40
-ymin,ymax = 0,10
-plt.xlim([xmin,xmax])
-plt.ylim([ymin,ymax])
-plt.plot(TEMPERATURE,Mean_cluster_radius,marker="o")
+    # Plotting
+    plt.suptitle(' Mean cluster radius a vs. temperature T')
+    plt.title(f'S_L={S_LEADER},simulation={N_SIMS},GRIDSIZE={GRIDSIZE_X},H={H}')
+    plt.xlabel('T')
+    plt.ylabel('a(T)')
 
-plt.grid()
-plt.legend()
-plt.tight_layout()
-plt.show()
+    xmin,xmax = 0,T_MAX
+    ymin,ymax = 0,10
+    plt.xlim([xmin,xmax])
+    plt.ylim([ymin,ymax])
+    plt.plot(TEMPERATURES,Mean_cluster_radius,marker="o")
+
+    plt.grid()
+    plt.legend()
+    plt.tight_layout()
+    plt.show()

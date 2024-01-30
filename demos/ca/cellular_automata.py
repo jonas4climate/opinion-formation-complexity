@@ -51,7 +51,7 @@ def g(distance_ij, type='linear', c=1):
 
 class CA(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform'):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', show_tqdm=True):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -80,6 +80,9 @@ class CA(object):
         self.distance_matrix = self.__gen_distance_matrix()
         self.beta_matrix = self.__gen_beta_matrix(beta, beta_leader)
         self.__node_influences = self.__gen_node_influences(s_leader)
+
+        # Extra
+        self.show_tqdm = show_tqdm
 
     def __gen_initial_opinion_grid(self):
         assert self.gridsize_x % 2 == 1 and self.gridsize_y % 2 == 1, 'Gridsize must be odd for central leader placement'
@@ -302,14 +305,15 @@ class CA(object):
 
     def evolve(self, timesteps):
         opinion_grid_history = np.ndarray(
-            (timesteps, self.gridsize_x, self.gridsize_y))
-        cluster_sizes = np.zeros(timesteps)
+            (timesteps+1, self.gridsize_x, self.gridsize_y))
+        cluster_sizes = np.zeros(timesteps+1)
 
         opinion_grid_history[0, :, :] = self.opinion_grid
         cluster_sizes[0] = self.__cluster_size_leader()
 
         # TODO: should be timesteps, code needs to be adjusted everywhere
-        for time_step in tqdm(range(timesteps-1)):
+        timesteps_iter = tqdm(range(timesteps)) if self.show_tqdm else range(timesteps)
+        for time_step in timesteps_iter:
             grid = self.__update_opinions()
             cluster_sizes[time_step+1] = self.__cluster_size_leader()
             opinion_grid_history[time_step+1, :, :] = grid

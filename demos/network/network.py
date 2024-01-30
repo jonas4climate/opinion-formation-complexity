@@ -52,7 +52,7 @@ def leader_degree(avg_degree, c=2):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, show_tqdm=True):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -73,6 +73,9 @@ class Network(object):
         # Network itself
         self.G = self.__initialize_network(type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist)
         self.N = self.G.number_of_nodes()
+
+        # Extra
+        self.show_tqdm = show_tqdm
 
     def __initialize_network(self, type='grid', ba_m=4, neighbor_dist=1):
         """
@@ -160,6 +163,8 @@ class Network(object):
             self.__initialize_attributes(G, leader_node)
 
             return G
+        else:
+            error(f'Network type {type} not supported.')
             
 
     def __ensure_leader(self, G, center_node):
@@ -289,7 +294,8 @@ class Network(object):
                             for _, data in self.G.nodes(data=True)])
         opinion_history[0] = opinions
 
-        for t in tqdm(range(timesteps)):
+        timesteps_iter = tqdm(range(timesteps)) if self.show_tqdm else range(timesteps)
+        for t in timesteps_iter:
             self.update_network()
             opinions = np.array([data['opinion']
                                 for _, data in self.G.nodes(data=True)])
