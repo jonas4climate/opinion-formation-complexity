@@ -59,7 +59,7 @@ def leader_degree(leader_degree, avg_degree, c=2):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -71,6 +71,7 @@ class Network(object):
         self.s_mean = s_mean
         self.s_leader = s_leader
         self.network_type = network_type
+        self.c_leader = c_leader
 
         # Functions passed
         self.d = lambda node_1, node_2: grid_distance_metric(
@@ -139,10 +140,12 @@ class Network(object):
             degrees = G.degree()
             sum_degrees = sum(dict(G.degree()).values())
             avg_degree = int(sum_degrees / len(degrees))
+            self.average_degree = avg_degree
 
             # Calculate the desired amount of degrees of leader node
             leader_degree_current = G.degree(leader_node)
-            leader_degree_final = leader_degree(leader_degree_current, avg_degree, 2)
+            c_leader = self.c_leader
+            leader_degree_final = leader_degree(leader_degree_current, avg_degree, c_leader)
 
             print(f"Average deree is {avg_degree}, where leader degree is {leader_degree_current} and desired is {leader_degree_final}")
             edges_to_add = leader_degree_final - leader_degree_current
@@ -376,7 +379,7 @@ class Network(object):
                 plt.grid(False)
                 plt.axis(False)
                 plt.title(
-                    f"Opinion network ({self.network_type} type) at $t={t}$ ($T={self.temp}$, $s_l={self.s_leader}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})",
+                    f"Opinion network ({self.network_type} type) at $t={t}$ ($T={self.temp}$, $c_l={self.c_leader}$, $<k>$={self.average_degree}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})",
                     fontsize=8)
                 return plt
 
