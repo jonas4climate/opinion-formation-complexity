@@ -105,8 +105,8 @@ class CA(object):
                         r = np.random.rand(1)
                         grid[x_idx, y_idx] = 1 if r < self.p_opinion_1 else -1
 
-        # Add leader in center with opinion -1
-        grid[center_x, center_y] = -1
+        # Add leader in center with opinion 1
+        grid[center_x, center_y] = 1
 
         return grid
 

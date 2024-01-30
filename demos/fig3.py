@@ -31,10 +31,12 @@ S_MEAN = 1
 T_MAX = 40
 
 
-TEMPERATURES=np.linspace(0,T_MAX,10)
+TEMPERATURES= np.linspace(0, T_MAX, 9)
 N_SIMS = 10    # Run times
-Mean_cluster_radius = []
+mean_cluster_radii = []
+std_cluster_radii = []
 
+# The function to pass to the pool
 def simulate_single_run(t):
     model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=t, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN, show_tqdm=False)
     data = model.evolve(TIMESTEPS)
@@ -42,16 +44,19 @@ def simulate_single_run(t):
     a_T = model.mean_cluster_radius()
     return a_T
 
-# If main process and not pool processes
+# If main process and not pool processes (to avoid pool process spawning more pool processes)
 if __name__ == '__main__':
 
     with Pool() as pool:
         pbar = tqdm(TEMPERATURES, total=len(TEMPERATURES)*N_SIMS, desc="Running simulation in batches", unit='sim')
         for t in pbar:
-            a_Ts = pool.map(simulate_single_run, [t]*N_SIMS)
-            Mean_cluster_radius.append(np.mean(a_Ts)) 
+            a_Ts = list(pool.map(simulate_single_run, [t]*N_SIMS))
+            print(a_Ts)
+            mean, std = np.mean(a_Ts), np.std(a_Ts)
+            mean_cluster_radii.append(mean)
+            std_cluster_radii.append(std)
             pbar.update(N_SIMS)     
-        print("Mean_cluster_radius",Mean_cluster_radius)
+            print("Mean_cluster_radius",mean_cluster_radii)
 
 
     # Plotting
@@ -61,11 +66,11 @@ if __name__ == '__main__':
     plt.ylabel('a(T)')
 
     xmin,xmax = 0,T_MAX
-    ymin,ymax = 0,10
+    # ymin,ymax = 0,10
     plt.xlim([xmin,xmax])
-    plt.ylim([ymin,ymax])
-    plt.plot(TEMPERATURES,Mean_cluster_radius,marker="o")
-
+    # plt.ylim([ymin,ymax])
+    plt.plot(TEMPERATURES,mean_cluster_radii,marker="o")
+    plt.fill_between(TEMPERATURES, np.array(mean_cluster_radii)-np.array(std_cluster_radii), np.array(mean_cluster_radii)+np.array(std_cluster_radii), alpha=0.3)
     plt.grid()
     plt.legend()
     plt.tight_layout()
