@@ -17,7 +17,7 @@ import csv
 ################################
 
 NUMBER_OF_T_VALUES_TO_TEST = 20 # Should be 20
-SIMS_PER_T_VALUE = 30 # Should be 20
+SIMS_PER_T_VALUE = 30 # Should be 30 for final one!
 T_MAX = 60
 
 
