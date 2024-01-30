@@ -16,11 +16,11 @@ import csv
 
 ################################
 
-NUMBER_OF_T_VALUES_TO_TEST = 10
-SIMS_PER_T_VALUE = 20
-T_MAX = 100
+NUMBER_OF_T_VALUES_TO_TEST = 10 # Should be 20
+SIMS_PER_T_VALUE = 10 # Should be 20
+T_MAX = 60
 
-THRESHOLD = 5 # Maximun leader cluster radius that is not considered opinion overcomming
+
 S_LEADER = 100             # May need to tweak this to ensure we are on cluster region!
 ################################
 
@@ -41,9 +41,12 @@ a_0 = 1
 
 S_MEAN = 1
 
-
+################################
 
 R = GRIDSIZE_X/2
+
+THRESHOLD =  int(np.sqrt((R**2)/2)) #5 # Run again with dynamic! threshold # Maximun leader cluster radius that is not considered opinion overcomming
+
 S_L_min = ca.minimun_leader_strength(R,BETA,H)
 S_L_max = ca.maximun_leader_strength(R,BETA,H)
 cluster_min = ca.a(R,BETA,H,S_L_min)
@@ -143,6 +146,9 @@ plt.show()
 temperatures = np.linspace(0,T_MAX,NUMBER_OF_T_VALUES_TO_TEST)
 p_overcoming_leader = np.zeros(NUMBER_OF_T_VALUES_TO_TEST)
 
+means =  np.zeros(NUMBER_OF_T_VALUES_TO_TEST)
+std_devs = np.zeros(NUMBER_OF_T_VALUES_TO_TEST)
+
 for index in range(NUMBER_OF_T_VALUES_TO_TEST):
 
     TEMP = temperatures[index]
@@ -168,19 +174,35 @@ for index in range(NUMBER_OF_T_VALUES_TO_TEST):
     # Over SIMS_PER_T_VALUE
     p_overcoming_leader[index] = leader_overcomed / SIMS_PER_T_VALUE
 
+    # Get confidence interval (?)
+    mean, std = np.mean(p_overcoming_leader[index]), np.std(p_overcoming_leader[index])
+    means[index] = mean#.append(mean)
+    std_devs[index] = std
+
+    # Get stdev and confidence interval
+
+
 ################################
 
 print(p_overcoming_leader)
+print(means)
+print(std_devs)
 
 
 # Save the data
 np.savetxt('./figures/t_threshold_plot_temperatures.npy',temperatures,delimiter=",")
 np.savetxt('./figures/t_threshold_plot_tp_overcoming_leader.npy',p_overcoming_leader,delimiter=",")
 
+np.savetxt('./figures/t_threshold_plot_means.npy',means,delimiter=",")
+np.savetxt('./figures/t_threshold_plot_std_devs.npy',std_devs,delimiter=",")
+
+
+
 # Plot the threshold phenomena
 
 plt.figure()
 plt.plot(temperatures,p_overcoming_leader,lw=2,c='blue')
+plt.fill_between(temperatures, np.array(means)-np.array(std_devs), np.array(means)+np.array(std_devs), alpha=0.3)
 
 
 plt.xlim([0,T_MAX])
