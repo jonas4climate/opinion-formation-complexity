@@ -30,7 +30,7 @@ INFLUENCE_DISTRIBUTION_MEAN = 1
 
 
 TEMPERATURE=np.linspace(0,40,10)
-simulation_times = 8    # Run times
+simulation_times = 10    # Run times
 Mean_cluster_radius = []
 
 
@@ -65,15 +65,15 @@ print("Mean_cluster_radius",Mean_cluster_radius)
 
 # Plotting
 plt.suptitle(' Mean cluster radius a vs. temperature T')
-plt.title(f'S_L={INFLUENCE_LEADER}')
+plt.title(f'S_L={INFLUENCE_LEADER},simulation={simulation_times},GRIDSIZE={GRIDSIZE_X},H={H}')
 plt.xlabel('T')
 plt.ylabel('a(T)')
 
-# xmin,xmax = 0,30
-# ymin,ymax = 0,10
-# plt.xlim([xmin,xmax])
-# plt.ylim([ymin,ymax])
-plt.plot(TEMPERATURE,Mean_cluster_radius,c='black',linestyle='--')
+xmin,xmax = 0,40
+ymin,ymax = 0,10
+plt.xlim([xmin,xmax])
+plt.ylim([ymin,ymax])
+plt.plot(TEMPERATURE,Mean_cluster_radius,marker="o")
 
 plt.grid()
 plt.legend()
