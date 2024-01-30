@@ -348,8 +348,9 @@ class Network(object):
                                 for _, data in self.G.nodes(data=True)])
             opinion_history[t+1] = opinions
 
-            longest_path_t = longest_path(self.G, self.G.nodes[self.leader_node]['opinion'])
-            path_history[t+1]= longest_path_t
+            if self.network_type == 'barabasi-albert':
+                longest_path_t = longest_path(self.G, self.G.nodes[self.leader_node]['opinion'])
+                path_history[t+1]= longest_path_t
 
         data = {'opinions': opinion_history, 'longest_path': path_history}
         return data
@@ -407,11 +408,10 @@ class Network(object):
 
         elif self.network_type == 'barabasi-albert':
             path_history = data['longest_path']
-            print(path_history)
+            pos = nx.spring_layout(self.G)
 
             def update(t):
                 plt.clf()
-                pos = nx.spring_layout(self.G)
 
                 #Place leader as a bigger node at the center of network representation
                 leader_position = pos[self.leader_node]
@@ -419,16 +419,17 @@ class Network(object):
                                 pos.items()}
                 node_sizes = [100 if node == self.leader_node else 20 for node in self.G.nodes]
 
-                #Subgraph for the longest path
-                path_edges = [(path_history[t][i], path_history[t][i + 1]) for i in range(len(path_history[t]) - 1)]
-                path_subgraph = self.G.edge_subgraph(path_edges)
+                nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size=node_sizes)
 
-                nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size = node_sizes)
+                # #Subgraph for the longest path
+                # path_edges = [(path_history[t][i], path_history[t][i + 1]) for i in range(len(path_history[t]) - 1)]
+                # path_subgraph = self.G.edge_subgraph(path_edges)
+                #
+                #
+                # #Illustrate subgraph
+                # nx.draw(path_subgraph, pos,node_size = 0, edge_color='green', width=1)
 
-                #Illustrate subgraph
-                nx.draw(path_subgraph, pos,node_size = 0, edge_color='black', width=1)
-                plt.annotate(f"Longest path length= {len(path_history[t])}", xy=(0.5, 0.05), xycoords='axes fraction',
-                             ha='center', va='center')
+                plt.annotate(f"Longest path length= {len(path_history[t])}", xy=(0.5, 0.0),xycoords='axes fraction', ha='center', va='center')
 
                 if draw_edges:
                     nx.draw_networkx_edges(self.G, final_pos)
