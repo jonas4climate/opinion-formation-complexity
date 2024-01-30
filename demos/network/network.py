@@ -46,13 +46,20 @@ def g(distance_ij, type='linear', c=1):
     elif type == 'logarithmic':
         return c * np.log(distance_ij)
 
-def leader_degree(avg_degree, c=2):
-    return avg_degree * c
+def leader_degree(leader_degree, avg_degree, c=2):
+    """
+    Returns leader_degree on the criteria that leader degree is minimal factor c as big as the average degree of the network
+    """
+    if leader_degree <= c * avg_degree:
+        return avg_degree * c
+
+    else:
+        return leader_degree
 
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, show_tqdm=True):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -63,6 +70,8 @@ class Network(object):
         self.beta_leader = beta_leader
         self.s_mean = s_mean
         self.s_leader = s_leader
+        self.network_type = network_type
+        self.c_leader = c_leader
 
         # Functions passed
         self.d = lambda node_1, node_2: grid_distance_metric(
@@ -73,9 +82,6 @@ class Network(object):
         # Network itself
         self.G = self.__initialize_network(type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist)
         self.N = self.G.number_of_nodes()
-
-        # Extra
-        self.show_tqdm = show_tqdm
 
     def __initialize_network(self, type='grid', ba_m=4, neighbor_dist=1):
         """
@@ -128,26 +134,29 @@ class Network(object):
 
             # Assume this is the leader because its the most connected node?
             leader_node = max(G.degree, key=lambda x: x[1])[0]
+            self.leader_node = leader_node
 
-            # # Alternative if we want to tweak the influence of the leader with a factor relative to average degree
-            #
-            # # Generate the average degree of all nodes in the network
-            # degrees = G.degree()
-            # sum_edges = sum(degrees.values())
-            # avg_degree = sum_edges / len(degrees)
-            #
-            # # Calculate the desired amount of degrees of leader node
-            # leader_degree_final = leader_degree(avg_degree, 2)
-            # leader_degree_current = G.degree(leader_node)
-            # edges_to_add = leader_degree_final - leader_degree_current
-            #
-            # # Adding the extra edges
-            # for _ in range(edges_to_add):
-            #     # Choose a random node to connect to
-            #     target = np.random.choice(list(G.nodes - {leader_node}))
-            #
-            #     if not G.has_edge(leader_node, target):
-            #         G.add_edge(leader_node, target)
+            # Generate the average degree of all nodes in the network
+            degrees = G.degree()
+            sum_degrees = sum(dict(G.degree()).values())
+            avg_degree = int(sum_degrees / len(degrees))
+            self.average_degree = avg_degree
+
+            # Calculate the desired amount of degrees of leader node
+            leader_degree_current = G.degree(leader_node)
+            c_leader = self.c_leader
+            leader_degree_final = leader_degree(leader_degree_current, avg_degree, c_leader)
+
+            print(f"Average deree is {avg_degree}, where leader degree is {leader_degree_current} and desired is {leader_degree_final}")
+            edges_to_add = leader_degree_final - leader_degree_current
+
+            # Adding the extra edges
+            for _ in range(edges_to_add):
+                # Choose a random node to connect to
+                target = np.random.choice(list(G.nodes - {leader_node}))
+
+                if not G.has_edge(leader_node, target):
+                    G.add_edge(leader_node, target)
 
             nodes = list(G.nodes())
             for source in nodes:
@@ -163,8 +172,6 @@ class Network(object):
             self.__initialize_attributes(G, leader_node)
 
             return G
-        else:
-            error(f'Network type {type} not supported.')
             
 
     def __ensure_leader(self, G, center_node):
@@ -210,7 +217,7 @@ class Network(object):
 
         # Adjust leader influence
         G.nodes[center_node]['influence'] = self.s_leader
-        G.nodes[center_node]['opinion'] = 1
+        G.nodes[center_node]['opinion'] = -1
 
     def __get_node_influences(self, N):
         """
@@ -294,8 +301,7 @@ class Network(object):
                             for _, data in self.G.nodes(data=True)])
         opinion_history[0] = opinions
 
-        timesteps_iter = tqdm(range(timesteps)) if self.show_tqdm else range(timesteps)
-        for t in timesteps_iter:
+        for t in tqdm(range(timesteps)):
             self.update_network()
             opinions = np.array([data['opinion']
                                 for _, data in self.G.nodes(data=True)])
@@ -332,29 +338,53 @@ class Network(object):
         """
         Plot the evolution of the opinion network graph from data returned by `evolve()`
         """
+
         plt.figure(figsize=(6, 6), layout='tight')
         opinion_history = data['opinions']
 
-        pos = {}
-        for n in self.G.nodes:
-            a, b = n
-            pos[n] = np.array([a, b])
+        if self.network_type == 'grid':
+            pos = {}
+            for n in self.G.nodes:
+                a, b = n
+                pos[n] = np.array([a, b])
 
-        def update(t):
-            plt.clf()
-            nx.draw_networkx_nodes(
-                self.G, pos, node_color=opinion_history[t], node_size=100, vmin=-1, vmax=1)
-            if draw_edges:
-                nx.draw_networkx_edges(self.G, pos, alpha=0.1)
-            plt.axis("equal")
-            plt.grid(False)
-            plt.axis(False)
-            plt.title(
-                f"Opinion network at $t={t}$ ($T={self.temp}$, $s_l={self.s_leader}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})")
-            return plt
+            def update(t):
+                plt.clf()
+                nx.draw_networkx_nodes(
+                    self.G, pos, node_color=opinion_history[t], node_size=100, vmin=-1, vmax=1)
+                if draw_edges:
+                    nx.draw_networkx_edges(self.G, pos, alpha=0.1)
+                plt.axis("equal")
+                plt.grid(False)
+                plt.axis(False)
+                plt.title(
+                    f"Opinion network ({self.network_type} type) at $t={t}$ ($T={self.temp}$, $s_l={self.s_leader}$, $\\hat{{s}}$={self.s_mean}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})", fontsize = 8)
+                return plt
 
-        anim = FuncAnimation(plt.gcf(), update, frames=range(
-            0, opinion_history.shape[0]), interval=interval)
+        elif self.network_type == 'barabasi-albert':
+            def update(t):
+                plt.clf()
+                pos = nx.spring_layout(self.G)
+
+                #Place leader as a bigger node at the center of network representation
+                leader_position = pos[self.leader_node]
+                final_pos = {node: (x - leader_position[0], y - leader_position[1]) for node, (x, y) in
+                                pos.items()}
+                node_sizes = [100 if node == self.leader_node else 20 for node in self.G.nodes]
+
+                nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size = node_sizes)
+                if draw_edges:
+                    nx.draw_networkx_edges(self.G, final_pos)
+
+                plt.grid(False)
+                plt.axis(False)
+                plt.title(
+                    f"Opinion network ({self.network_type} type) at $t={t}$ ($T={self.temp}$, $c_l={self.c_leader}$, $<k>$={self.average_degree}, $\\beta$={self.beta}, $p_{{occ}}$={self.p_occupation}, $p_{{1}}$={self.p_opinion_1})",
+                    fontsize=8)
+                return plt
+
+        anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
+
         if save:
             anim.save(
                 f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
