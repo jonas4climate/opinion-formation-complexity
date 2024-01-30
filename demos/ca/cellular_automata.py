@@ -3,6 +3,7 @@ from math import floor
 from scipy.special import ellipeinc
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from multiprocessing import Pool
 from tqdm import tqdm
 import logging
 from logging import warning, error, info, debug
@@ -514,39 +515,36 @@ def maximun_leader_strength(r, beta, h):
 
 
 
-def find_critical_temperature(model,tmin,tmax,timesteps,t_values,sims_per_timestep,threshold):
+def find_critical_temperature(tmin,tmax,timesteps,t_values,sims_per_timestep,threshold,GRIDSIZE_X,GRIDSIZE_Y,BETA_PEOPLE,BETA_LEADER,H,P_OCCUPATION,P_OPINION_1,S_LEADER,a_0,S_MEAN):
 
     temperatures = np.linspace(tmin,tmax,t_values)
     p_overcoming_leader = np.zeros(t_values)
 
-    #average_cluster_sizes = np.random.rand(t_values)
-
     for T in (range(t_values)):
-        # Retrieve the T
-
-
-
-        TEMP = temperatures[T]
-        print(f'Sim {T+1}/{t_values}: {TEMP}')
-        leader_overcomed = 0
         
-        # Do many simulations with that T to get av. cluster size
-        for sim in range(sims_per_timestep):
-            # Update temperature of model!
+        # Retrieve the T
+        TEMP = temperatures[T]
+        leader_overcomed = 0
+        print(f'Sim {T+1}/{t_values}: {TEMP}')
+        
+        with Pool() as pool:
+            # Do many simulations with that T to get av. cluster size
+            # Each with a different innitialization
+            for sim in range(sims_per_timestep):
+                # Update temperature of model!
 
-            model.reset() # TODO: UPDATE CA, TO ENSURE STOCASTICITY FROM INFLUENCE INIT
-            
-            model.temp = TEMP
-            
-            #TODO: Evolve one ts at a time so if we overcome leader, 
-            # we can end this sim already
+                model = CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA_PEOPLE, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
 
-            data = model.evolve(timesteps)
-            simulation = data['opinions']
-            last_cluster_size = data['cluster_sizes'][-1]
+                #pool.map(simulate_single_run, [sim]*sims_per_timestep)
+                #TODO: Evolve one ts at a time so if we overcome leader, 
+                # we can end this sim already
 
-            if last_cluster_size <= threshold:
-                leader_overcomed += 1
+                data = model.evolve(timesteps)
+                simulation = data['opinions']
+                last_cluster_size = data['cluster_sizes'][-1]
+
+                if last_cluster_size <= threshold:
+                    leader_overcomed += 1
 
         # Get average cluster size
     p_overcoming_leader[T] = leader_overcomed / sims_per_timestep
