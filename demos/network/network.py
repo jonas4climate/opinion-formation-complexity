@@ -8,6 +8,42 @@ from matplotlib.animation import FuncAnimation
 
 logging.basicConfig(level=logging.WARNING)
 
+def longest_opinion_path(G, leader_opinion, node_current, path_current, length_current, visited):
+    # Mark node you are at and move one step to the next node with the leader opinion
+    visited.add(node_current)
+    path_current.append(node_current)
+
+    #Find neighbors with consensus
+    consensus_neighbors = [neighbor for neighbor in G.neighbors(node_current) if G.nodes[neighbor]['opinion'] == leader_opinion]
+
+    # Recursively look at the neighbor with the leader opinion
+    if consensus_neighbors:
+        for neighbor in consensus_neighbors:
+            if neighbor not in visited:
+                length_current += 1
+                longest_opinion_path(G, leader_opinion, neighbor, path_current, length_current, visited)
+
+    return path_current, length_current
+
+def longest_path(G, leader_opinion):
+    #Find the longest path of nodes with the same opinion of the leader
+
+    longest_path = []
+    longest_length = 0
+    visited = set()
+
+    for node in G.nodes:
+        if G.nodes[node]['opinion'] == leader_opinion and node not in visited:
+            # Start DFS from the current node
+            current_path, current_length = longest_opinion_path(G, leader_opinion, node, [], 0, visited)
+
+            # Update the longest path and length if the current path is longer
+            if current_length > longest_length:
+                longest_path = current_path
+                longest_length = current_length
+
+    return longest_path
+
 
 def grid_distance_metric(node_1, node_2, type='euclidean'):
     x0, y0 = node_1
@@ -147,7 +183,6 @@ class Network(object):
             c_leader = self.c_leader
             leader_degree_final = leader_degree(leader_degree_current, avg_degree, c_leader)
 
-            print(f"Average deree is {avg_degree}, where leader degree is {leader_degree_current} and desired is {leader_degree_final}")
             edges_to_add = leader_degree_final - leader_degree_current
 
             # Adding the extra edges
@@ -292,22 +327,31 @@ class Network(object):
             new_opinion = self.__update_opinion(sigma_i, impact)
             self.G.nodes[node]['opinion'] = new_opinion
 
+
     def evolve(self, timesteps):
         """
         Evolve the network graph for timesteps
         """
+
         opinion_history = np.ndarray((timesteps+1, self.N))
         opinions = np.array([data['opinion']
                             for _, data in self.G.nodes(data=True)])
         opinion_history[0] = opinions
 
+        path_history = np.ndarray((timesteps+1),dtype=object)
+        path_history[0] = []
+
         for t in tqdm(range(timesteps)):
+
             self.update_network()
             opinions = np.array([data['opinion']
                                 for _, data in self.G.nodes(data=True)])
             opinion_history[t+1] = opinions
 
-        data = {'opinions': opinion_history}
+            longest_path_t = longest_path(self.G, self.G.nodes[self.leader_node]['opinion'])
+            path_history[t+1]= longest_path_t
+
+        data = {'opinions': opinion_history, 'longest_path': path_history}
         return data
 
     def plot_opinion_network_at_time_t(self, data, t, save=False):
@@ -362,6 +406,9 @@ class Network(object):
                 return plt
 
         elif self.network_type == 'barabasi-albert':
+            path_history = data['longest_path']
+            print(path_history)
+
             def update(t):
                 plt.clf()
                 pos = nx.spring_layout(self.G)
@@ -372,7 +419,17 @@ class Network(object):
                                 pos.items()}
                 node_sizes = [100 if node == self.leader_node else 20 for node in self.G.nodes]
 
+                #Subgraph for the longest path
+                path_edges = [(path_history[t][i], path_history[t][i + 1]) for i in range(len(path_history[t]) - 1)]
+                path_subgraph = self.G.edge_subgraph(path_edges)
+
                 nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size = node_sizes)
+
+                #Illustrate subgraph
+                nx.draw(path_subgraph, pos,node_size = 0, edge_color='black', width=1)
+                plt.annotate(f"Longest path length= {len(path_history[t])}", xy=(0.5, 0.05), xycoords='axes fraction',
+                             ha='center', va='center')
+
                 if draw_edges:
                     nx.draw_networkx_edges(self.G, final_pos)
 
