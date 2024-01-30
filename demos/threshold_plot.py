@@ -9,15 +9,16 @@ p_overcoming_leader = f(TEMPERATURE)
 
 """
 
-import demos.ca.cellular_automata as ca
+import ca.cellular_automata as ca
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 ################################
 
-NUMBER_OF_T_VALUES_TO_TEST = 20
+NUMBER_OF_T_VALUES_TO_TEST = 10
 SIMS_PER_T_VALUE = 20
-T_MAX = 200
+T_MAX = 100
 
 THRESHOLD = 5 # Maximun leader cluster radius that is not considered opinion overcomming
 S_LEADER = 100             # May need to tweak this to ensure we are on cluster region!
@@ -29,7 +30,7 @@ S_LEADER = 100             # May need to tweak this to ensure we are on cluster 
 ################################
 
 GRIDSIZE_X,GRIDSIZE_Y = 21,21
-TIMESTEPS = 10
+TIMESTEPS = 20
 #TEMPERATURE = 0
 BETA = 1
 BETA_LEADER = 1
@@ -40,7 +41,7 @@ a_0 = 1
 
 S_MEAN = 1
 
-################################
+
 
 R = GRIDSIZE_X/2
 S_L_min = ca.minimun_leader_strength(R,BETA,H)
@@ -49,6 +50,47 @@ cluster_min = ca.a(R,BETA,H,S_L_min)
 cluster_max = ca.a(R,BETA,H,S_L_max)
 xmin,xmax = 0,2*S_L_max
 ymin,ymax = 0,22.5
+
+################################
+
+# Save parameters
+
+params_used = {'NUMBER_OF_T_VALUES_TO_TEST':NUMBER_OF_T_VALUES_TO_TEST,
+               'SIMS_PER_T_VALUE':SIMS_PER_T_VALUE,
+               'T_MAX':T_MAX,
+               'THRESHOLD':THRESHOLD,
+               'S_LEADER':S_LEADER,
+               'GRIDSIZE_X': 21,
+               'GRIDSIZE_Y':21,
+               'TIMESTEPS':TIMESTEPS,
+               'BETA':BETA,
+               'BETA_LEADER':BETA_LEADER,
+               'H':H,
+               'P_OCCUPATION':P_OCCUPATION,
+               'P_OPINION_1':P_OPINION_1,
+               'a_0':a_0,
+               'S_MEAN':S_MEAN,
+               'R':R,
+               'S_L_min':S_L_min,
+               'S_L_max':S_L_max,
+               'cluster_min':cluster_min,
+               'cluster_max':cluster_max,
+               'xmin':xmin,
+               'xmax':xmax,
+               'ymin':ymin,
+               'ymax':ymax
+               }
+
+
+with open('./figures/t_threshold_plot_params.csv', 'w') as f:  # You will need 'wb' mode in Python 2.x
+    w = csv.DictWriter(f, params_used.keys())
+    w.writeheader()
+    w.writerow(params_used)
+
+# To read
+#reader = csv.DictReader(open('myfile.csv'))
+#for row in reader:
+#    # profit !
 
 ################################
 
@@ -75,6 +117,9 @@ ax.scatter(S_LEADER,last_cluster)
 # Show
 plt.grid()
 plt.tight_layout()
+
+plt.savefig('./figures/t_threshold_plot_start_analyticall.png')
+
 plt.show(block=True)
 
 ################################
@@ -85,6 +130,9 @@ grid_t = simulation[-1,:,:]
 im = ax.imshow(grid_t, cmap='seismic',
                 interpolation='nearest', vmin=-1, vmax=1)
 plt.tight_layout()
+
+plt.savefig('./figures/t_threshold_plot_start_grid.png')
+
 plt.show()
 
 ################################
@@ -122,10 +170,18 @@ for index in range(NUMBER_OF_T_VALUES_TO_TEST):
 
 ################################
 
+print(p_overcoming_leader)
+
+
+# Save the data
+np.savetxt('./figures/t_threshold_plot_temperatures.npy',temperatures,delimiter=",")
+np.savetxt('./figures/t_threshold_plot_tp_overcoming_leader.npy',p_overcoming_leader,delimiter=",")
+
 # Plot the threshold phenomena
 
 plt.figure()
-plt.plot(temperatures,p_overcoming_leader)
+plt.plot(temperatures,p_overcoming_leader,lw=2,c='blue')
+
 
 plt.xlim([0,T_MAX])
 plt.ylim([0,1])
@@ -137,5 +193,9 @@ plt.ylabel('p(Overcoming leader)')
 
 plt.grid()
 plt.tight_layout()
+
+
+plt.savefig('./figures/t_threshold_plot.png')
+
 
 plt.show()

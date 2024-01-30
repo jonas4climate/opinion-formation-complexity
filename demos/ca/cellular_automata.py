@@ -515,8 +515,11 @@ def maximun_leader_strength(r, beta, h):
 
 
 
+
 def find_critical_temperature(tmin,tmax,timesteps,t_values,sims_per_timestep,threshold,GRIDSIZE_X,GRIDSIZE_Y,BETA_PEOPLE,BETA_LEADER,H,P_OCCUPATION,P_OPINION_1,S_LEADER,a_0,S_MEAN):
 
+    # The function to pass to the pool
+  
     temperatures = np.linspace(tmin,tmax,t_values)
     p_overcoming_leader = np.zeros(t_values)
 
@@ -527,27 +530,21 @@ def find_critical_temperature(tmin,tmax,timesteps,t_values,sims_per_timestep,thr
         leader_overcomed = 0
         print(f'Sim {T+1}/{t_values}: {TEMP}')
         
-        with Pool() as pool:
-            # Do many simulations with that T to get av. cluster size
-            # Each with a different innitialization
-            for sim in range(sims_per_timestep):
-                # Update temperature of model!
+        for sim in range(sims_per_timestep):
 
-                model = CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA_PEOPLE, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
+            model = CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA_PEOPLE, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
+            
+            # Evolve one step at a time
+            data = model.evolve(timesteps)
+            #simulation = data['opinions']
+            last_cluster_size = data['cluster_sizes'][-1]
 
-                #pool.map(simulate_single_run, [sim]*sims_per_timestep)
-                #TODO: Evolve one ts at a time so if we overcome leader, 
-                # we can end this sim already
+            if last_cluster_size <= threshold:
+                leader_overcomed += 1
 
-                data = model.evolve(timesteps)
-                simulation = data['opinions']
-                last_cluster_size = data['cluster_sizes'][-1]
 
-                if last_cluster_size <= threshold:
-                    leader_overcomed += 1
-
-        # Get average cluster size
-    p_overcoming_leader[T] = leader_overcomed / sims_per_timestep
+        # Get prob of ovrcoming leader
+        p_overcoming_leader[T] = leader_overcomed / sims_per_timestep
 
 
     return temperatures,p_overcoming_leader
