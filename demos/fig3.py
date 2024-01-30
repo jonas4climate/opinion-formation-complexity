@@ -30,9 +30,9 @@ S_LEADER = 400
 S_MEAN = 1
 
 T_MAX = 40
+STEPSIZE = 5
 
-
-TEMPERATURES= np.linspace(0, T_MAX, 9)
+TEMPERATURES= np.arange(0, T_MAX+STEPSIZE, STEPSIZE)
 N_SIMS = 10    # Run times
 mean_cluster_radii = []
 std_cluster_radii = []
