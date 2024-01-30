@@ -167,7 +167,9 @@ for T in range(NUMBER_OF_TEMPERATURE_VALUES_TO_TEST):
     # Do many simulations with that T to get av. cluster size
     for sim in range(NUMBER_OF_SIMS_PER_TEMPERATURE_VALUE):
 
-        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
+        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP,
+                beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION,
+                p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
         data = model.evolve(TIMESTEPS)
         simulation = data['opinions']
         cluster_sizes = data['cluster_sizes']

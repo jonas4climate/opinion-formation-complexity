@@ -29,14 +29,14 @@ S_MEAN = 1
 
 
 TEMPERATURE=np.linspace(0,40,10)
-simulation_times = 8    # Run times
+SIMULATION_TIMES = 10    # Run times
 Mean_cluster_radius = []
 
 
 for t in TEMPERATURE:
     Simu_mean_cluster_radius = []
     
-    for s in range(simulation_times):
+    for s in range(SIMULATION_TIMES):
         model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=t, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
         data = model.evolve(TIMESTEPS)
         simulation_final = data['opinions'][TIMESTEPS-1]
@@ -64,15 +64,15 @@ print("Mean_cluster_radius",Mean_cluster_radius)
 
 # Plotting
 plt.suptitle(' Mean cluster radius a vs. temperature T')
-plt.title(f'S_L={S_LEADER}')
+plt.title(f'S_L={S_LEADER},simulation={SIMULATION_TIMES},GRIDSIZE={GRIDSIZE_X},H={H}')
 plt.xlabel('T')
 plt.ylabel('a(T)')
 
-# xmin,xmax = 0,30
-# ymin,ymax = 0,10
-# plt.xlim([xmin,xmax])
-# plt.ylim([ymin,ymax])
-plt.plot(TEMPERATURE,Mean_cluster_radius,c='black',linestyle='--')
+xmin,xmax = 0,40
+ymin,ymax = 0,10
+plt.xlim([xmin,xmax])
+plt.ylim([ymin,ymax])
+plt.plot(TEMPERATURE,Mean_cluster_radius,marker="o")
 
 plt.grid()
 plt.legend()
