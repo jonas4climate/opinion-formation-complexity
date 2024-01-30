@@ -22,14 +22,13 @@ R = float(params['R'])
 T_MAX = int(params['T_MAX'])
 SIMS_PER_T_VALUE = int(params['SIMS_PER_T_VALUE'])
 THRESHOLD = float(params['THRESHOLD'])
-
 NUMBER_OF_T_VALUES_TO_TEST = int(params['NUMBER_OF_T_VALUES_TO_TEST'])
 
 temperatures = np.linspace(0,T_MAX,NUMBER_OF_T_VALUES_TO_TEST)
 
-
 p_overcoming_leader = np.fromfile('./figures/t_threshold_plot_tp_overcoming_leader.npy',sep='\n')#, dtype=float)
 
+# Of the cluster sizes at the end of each temperature
 means = np.fromfile("./figures/t_threshold_plot_means.npy",sep='\n')#, dtype=)
 std_devs = np.fromfile("./figures/t_threshold_plot_std_devs.npy",sep='\n')#, dtype=float)
 

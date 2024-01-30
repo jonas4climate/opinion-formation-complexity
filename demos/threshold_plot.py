@@ -16,8 +16,8 @@ import csv
 
 ################################
 
-NUMBER_OF_T_VALUES_TO_TEST = 10 # Should be 20
-SIMS_PER_T_VALUE = 10 # Should be 20
+NUMBER_OF_T_VALUES_TO_TEST = 20 # Should be 20
+SIMS_PER_T_VALUE = 30 # Should be 20
 T_MAX = 60
 
 
@@ -154,6 +154,7 @@ for index in range(NUMBER_OF_T_VALUES_TO_TEST):
     TEMP = temperatures[index]
     print(f'Sim {index+1}/{NUMBER_OF_T_VALUES_TO_TEST}')
     leader_overcomed = 0
+    last_cluster_sizes = np.zeros(SIMS_PER_T_VALUE)
 
     for sim in range(SIMS_PER_T_VALUE):
         model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
@@ -161,6 +162,9 @@ for index in range(NUMBER_OF_T_VALUES_TO_TEST):
         #simulation = data['opinions']
         #cluster_sizes = data['cluster_sizes']
         last_cluster_size = data['cluster_sizes'][-1]
+        
+        # Save to make std dev
+        last_cluster_sizes[sim] = last_cluster_size
 
         # Check if unification was overcomed!
         # That is, if the cluster around leader is gone
@@ -174,10 +178,25 @@ for index in range(NUMBER_OF_T_VALUES_TO_TEST):
     # Over SIMS_PER_T_VALUE
     p_overcoming_leader[index] = leader_overcomed / SIMS_PER_T_VALUE
 
-    # Get confidence interval (?)
-    mean, std = np.mean(p_overcoming_leader[index]), np.std(p_overcoming_leader[index])
+    # The mean is the same as the p_overcomming leader
+    
+    #The std is the std of the binomial distribution (np.sqrt(n * p * (1 - p))!
+    # That has n=SIMS_PER_T_VALUE and p = p_overcoming_leader
+    #std_devs[index] = np.sqrt(SIMS_PER_T_VALUE * p_overcoming_leader[index] * (1 - p_overcoming_leader[index]))
+
+    # The std dev is the std dev in the distrib that has leader_overcomed 1s and the other elements 0s
+    runs = np.zeros(SIMS_PER_T_VALUE)
+    runs[:leader_overcomed] = 1
+    # Turn leader_overcomed elements to 1
+    std_devs[index] = np.std(runs)
+
+    print(runs)
+    print('STD binom',np.sqrt(SIMS_PER_T_VALUE * p_overcoming_leader[index] * (1 - p_overcoming_leader[index])),)
+    print('STD empiric',np.std(runs))
+
+    mean = np.mean(runs) # Should be same as p_overcoming_leader[index]
     means[index] = mean#.append(mean)
-    std_devs[index] = std
+    #std_devs[index] = std
 
     # Get stdev and confidence interval
 
