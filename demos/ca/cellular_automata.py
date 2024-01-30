@@ -461,9 +461,9 @@ def update_basics_diagram(fig, ax):
 def analytical_expect_clusters(r, beta, h, s_l):
     # Ensure both solutions are > 0
 
-    print('First half (2*pi*R-sqrt(pi)+beta-h)^2:',
-          (2*np.pi*r - np.sqrt(np.pi) + beta - h)**2)
-    print('Second half (32*s_l):', 32*s_l)
+    #print('First half (2*pi*R-sqrt(pi)+beta-h)^2:',
+    #      (2*np.pi*r - np.sqrt(np.pi) + beta - h)**2)
+    #print('Second half (32*s_l):', 32*s_l)
 
     condition_1 = bool(
         (2*np.pi*r - np.sqrt(np.pi) + beta - h)**2 - 32*s_l >= 0)
@@ -506,3 +506,76 @@ def minimun_leader_strength(r, beta, h):
 def maximun_leader_strength(r, beta, h):
     # TODO: Add with -beta, but one should be enough
     return (1/32)*(2*np.pi*r - np.sqrt(np.pi) + beta - h)**2
+
+
+
+
+def find_critical_temperature(model,tmin,tmax,timesteps,t_values,sims_per_timestep,threshold):
+
+    temperatures = np.linspace(tmin,tmax,t_values)
+    p_overcoming_leader = np.zeros(t_values)
+
+    #average_cluster_sizes = np.random.rand(t_values)
+
+    for T in (range(t_values)):
+        # Retrieve the T
+
+
+
+        TEMP = temperatures[T]
+        print(f'Sim {T+1}/{t_values}: {TEMP}')
+        leader_overcomed = 0
+        
+        # Do many simulations with that T to get av. cluster size
+        for sim in range(sims_per_timestep):
+            # Update temperature of model!
+
+            model.reset() # TODO: UPDATE CA, TO ENSURE STOCASTICITY FROM INFLUENCE INIT
+            
+            model.temp = TEMP
+            
+            #TODO: Evolve one ts at a time so if we overcome leader, 
+            # we can end this sim already
+
+            data = model.evolve(timesteps)
+            simulation = data['opinions']
+            last_cluster_size = data['cluster_sizes'][-1]
+
+            if last_cluster_size <= threshold:
+                leader_overcomed += 1
+
+        # Get average cluster size
+    p_overcoming_leader[T] = leader_overcomed / sims_per_timestep
+
+
+    return temperatures,p_overcoming_leader
+
+
+
+def plot_critical_temperature(temperatures,average_cluster_sizes,xmin,xmax,T_VALUES,R):
+
+    fig,ax = plt.subplots()
+
+    #plt.figure()
+
+    # Max cluster size line
+    x_cons = np.linspace(xmin, xmax, T_VALUES)
+    y_cons = np.ones(T_VALUES)*R
+    ax.plot(x_cons,y_cons,c='black',linestyle='-')
+
+    # Horizontal line with minimun value expected cluster
+
+    # Add threshold used to figure caption!
+
+    ax.plot(temperatures,average_cluster_sizes)
+    ax.set_title('Probability of overcomming leader cluster with temperature')
+    ax.set_xlabel('Temperature')
+    ax.set_ylabel('p(Overcoming leader cluster)')
+    ax.set_xlim([temperatures[0],temperatures[-1]])
+    ax.set_ylim([0,1])
+
+    #plt.grid()
+    #plt.tight_layout()
+    #plt.show()
+
+    return fig,ax
