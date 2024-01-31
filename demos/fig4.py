@@ -31,7 +31,7 @@ MAX_TEMP = 120
 S_LEADER_RANGE = np.linspace(0, MAX_S_LEADER, NUM_OF_S_LEADER_RANGE) 
 TEMP_RANGE = np.linspace(0, MAX_TEMP, NUM_OF_TEMP_RANGE) 
 
-SIMULATION_TIMES = 5   # Run times
+SIMULATION_TIMES = 10   # Run times
 
 
 
