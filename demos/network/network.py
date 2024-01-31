@@ -8,6 +8,42 @@ from matplotlib.animation import FuncAnimation
 
 logging.basicConfig(level=logging.WARNING)
 
+def longest_opinion_path(G, leader_opinion, node_current, path_current, length_current, visited):
+    # Mark node you are at and move one step to the next node with the leader opinion
+    visited.add(node_current)
+    path_current.append(node_current)
+
+    #Find neighbors with consensus
+    consensus_neighbors = [neighbor for neighbor in G.neighbors(node_current) if G.nodes[neighbor]['opinion'] == leader_opinion]
+
+    # Recursively look at the neighbor with the leader opinion
+    if consensus_neighbors:
+        for neighbor in consensus_neighbors:
+            if neighbor not in visited:
+                length_current += 1
+                longest_opinion_path(G, leader_opinion, neighbor, path_current, length_current, visited)
+
+    return path_current, length_current
+
+def longest_path(G, leader_opinion):
+    #Find the longest path of nodes with the same opinion of the leader
+
+    longest_path = []
+    longest_length = 0
+    visited = set()
+
+    for node in G.nodes:
+        if G.nodes[node]['opinion'] == leader_opinion and node not in visited:
+            # Start DFS from the current node
+            current_path, current_length = longest_opinion_path(G, leader_opinion, node, [], 0, visited)
+
+            # Update the longest path and length if the current path is longer
+            if current_length > longest_length:
+                longest_path = current_path
+                longest_length = current_length
+
+    return longest_path
+
 
 def grid_distance_metric(node_1, node_2, type='euclidean'):
     x0, y0 = node_1
@@ -59,7 +95,7 @@ def leader_degree(leader_degree, avg_degree, c=2):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1, init_using_ca=None):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -80,16 +116,16 @@ class Network(object):
         self.q = lambda mean: prob_dist_s_people(mean, type=s_prob_dist_func)
 
         # Network itself
-        self.G = self.__initialize_network(grid_type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist, init_using_ca=init_using_ca)
+        self.G = self.__initialize_network(type=network_type, ba_m=ba_m, neighbor_dist=neighbor_dist)
         self.N = self.G.number_of_nodes()
 
-    def __initialize_network(self, grid_type='grid', ba_m=4, neighbor_dist=1, init_using_ca=None):
+    def __initialize_network(self, type='grid', ba_m=4, neighbor_dist=1):
         """
         Initialize network based on initial parameter values
         """
 
         # Create 2D grid graph
-        if grid_type == 'grid':
+        if type == 'grid':
             G = nx.grid_2d_graph(self.gridsize_x, self.gridsize_y)
 
             # Remove nodes outside of radius R
@@ -104,30 +140,25 @@ class Network(object):
             for source in nodes:
                 for neighbor in nodes:
                     if source != neighbor:
-                        distance = self.d(source, neighbor)
+                        distance = sum(abs(source[i] - neighbor[i])
+                                    for i in range(2))
                         G.add_edge(source, neighbor, distance=distance)
 
-            
-            if init_using_ca is not None:
-                ca = init_using_ca
-                nodes_to_remove = [node for node in G.nodes() if node not in ca.node_coords]
-                G.remove_nodes_from(nodes_to_remove)
-            else:
-                # Remove nodes with probability (1-p)
-                p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
-                nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
-                                for y, value in enumerate(row) if value > self.p_occupation]
-                G.remove_nodes_from(nodes_to_remove)
+            # Remove nodes with probability (1-p)
+            p_grid = np.random.rand(self.gridsize_x, self.gridsize_y)
+            nodes_to_remove = [(x, y) for x, row in enumerate(p_grid)
+                            for y, value in enumerate(row) if value > self.p_occupation]
+            G.remove_nodes_from(nodes_to_remove)
 
             # Ensure the leader is present in the graph
             self.__ensure_leader(G, center_node)
 
             # Initialize attributes of the graph
-            self.__initialize_attributes(G, center_node, init_using_ca=init_using_ca)
+            self.__initialize_attributes(G, center_node)
 
             return G
         
-        elif grid_type == 'barabasi-albert':
+        elif type == 'barabasi-albert':
             R = self.gridsize_x / 2
             N_in_circle = sum(1 for x in range(self.gridsize_x)
                     for y in range(self.gridsize_y) if self.d((x, y), (R, R)) <= R)
@@ -152,7 +183,6 @@ class Network(object):
             c_leader = self.c_leader
             leader_degree_final = leader_degree(leader_degree_current, avg_degree, c_leader)
 
-            print(f"Average deree is {avg_degree}, where leader degree is {leader_degree_current} and desired is {leader_degree_final}")
             edges_to_add = leader_degree_final - leader_degree_current
 
             # Adding the extra edges
@@ -174,7 +204,7 @@ class Network(object):
             # Leader is always in the "center" as there is a central hub for BA graphs, so no need to ensure leader is present
                     
             # Initialize attributes of the graph
-            self.__initialize_attributes(G, leader_node, init_using_ca=init_using_ca)
+            self.__initialize_attributes(G, leader_node)
 
             return G
             
@@ -195,7 +225,7 @@ class Network(object):
                         abs(other_node[i] - center_node[i]) for i in range(2))
                     G.add_edge(other_node, center_node, distance=distance)
 
-    def __initialize_attributes(self, G, center_node, init_using_ca=None):
+    def __initialize_attributes(self, G, center_node):
         """
         Initialize the attributes of each node in network graph.
 
@@ -207,12 +237,8 @@ class Network(object):
         N = G.number_of_nodes()
 
         # Create the attributes for the nodes
-        if init_using_ca is not None:
-            ca = init_using_ca
-            opinions = [int(ca.starting_grid[int(i), int(j)]) for i, j in ca.node_coords]
-        else:
-            opinions = np.random.choice(
-                [1, -1], size=N, p=[self.p_opinion_1, 1-self.p_opinion_1])
+        opinions = np.random.choice(
+            [1, -1], size=N, p=[self.p_opinion_1, 1-self.p_opinion_1])
         influences = self.__get_node_influences(N)
         betas = [self.beta] * N
         impacts = np.zeros(N)
@@ -226,7 +252,7 @@ class Network(object):
 
         # Adjust leader influence
         G.nodes[center_node]['influence'] = self.s_leader
-        G.nodes[center_node]['opinion'] = 1
+        G.nodes[center_node]['opinion'] = -1
 
     def __get_node_influences(self, N):
         """
@@ -301,22 +327,32 @@ class Network(object):
             new_opinion = self.__update_opinion(sigma_i, impact)
             self.G.nodes[node]['opinion'] = new_opinion
 
+
     def evolve(self, timesteps):
         """
         Evolve the network graph for timesteps
         """
+
         opinion_history = np.ndarray((timesteps+1, self.N))
         opinions = np.array([data['opinion']
                             for _, data in self.G.nodes(data=True)])
         opinion_history[0] = opinions
 
+        path_history = np.ndarray((timesteps+1),dtype=object)
+        path_history[0] = []
+
         for t in tqdm(range(timesteps)):
+
             self.update_network()
             opinions = np.array([data['opinion']
                                 for _, data in self.G.nodes(data=True)])
             opinion_history[t+1] = opinions
 
-        data = {'opinions': opinion_history}
+            if self.network_type == 'barabasi-albert':
+                longest_path_t = longest_path(self.G, self.G.nodes[self.leader_node]['opinion'])
+                path_history[t+1]= longest_path_t
+
+        data = {'opinions': opinion_history, 'longest_path': path_history}
         return data
 
     def plot_opinion_network_at_time_t(self, data, t, save=False):
@@ -343,7 +379,7 @@ class Network(object):
             plt.savefig(
                 f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_t={t}.png', dpi=300)
 
-    def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False, filename=None):
+    def plot_opinion_network_evolution(self, data, interval=500, save=False, draw_edges=False):
         """
         Plot the evolution of the opinion network graph from data returned by `evolve()`
         """
@@ -371,9 +407,11 @@ class Network(object):
                 return plt
 
         elif self.network_type == 'barabasi-albert':
+            path_history = data['longest_path']
+            pos = nx.spring_layout(self.G)
+
             def update(t):
                 plt.clf()
-                pos = nx.spring_layout(self.G)
 
                 #Place leader as a bigger node at the center of network representation
                 leader_position = pos[self.leader_node]
@@ -381,7 +419,18 @@ class Network(object):
                                 pos.items()}
                 node_sizes = [100 if node == self.leader_node else 20 for node in self.G.nodes]
 
-                nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size = node_sizes)
+                nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size=node_sizes)
+
+                # #Subgraph for the longest path
+                # path_edges = [(path_history[t][i], path_history[t][i + 1]) for i in range(len(path_history[t]) - 1)]
+                # path_subgraph = self.G.edge_subgraph(path_edges)
+                #
+                #
+                # #Illustrate subgraph
+                # nx.draw(path_subgraph, pos,node_size = 0, edge_color='green', width=1)
+
+                plt.annotate(f"Longest path length= {len(path_history[t])}", xy=(0.5, 0.0),xycoords='axes fraction', ha='center', va='center')
+
                 if draw_edges:
                     nx.draw_networkx_edges(self.G, final_pos)
 
@@ -395,6 +444,5 @@ class Network(object):
         anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
 
         if save:
-            filename = f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4' if filename is None else f'figures/{filename}.mp4'
-            anim.save(f'{filename}', dpi=300)
-
+            anim.save(
+                f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
