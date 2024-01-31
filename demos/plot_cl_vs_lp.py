@@ -91,8 +91,6 @@ plt.title(f'N={node_count}, {NR_RUNS} runs/$C_l$, $C_l$_MAX={C_L_UPPER}')
 plt.xlabel('$C_l$')
 plt.ylabel('Average Longest Path Length')
 
-
-# Display the plot
 plt.show()
 
 
