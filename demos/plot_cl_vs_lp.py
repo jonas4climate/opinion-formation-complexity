@@ -51,10 +51,10 @@ parameters = {
 #Define C_L range
 
 C_L_LOWER = 1
-C_L_UPPER = 50
+C_L_UPPER = 100
 C_L_RANGE = range(C_L_LOWER,C_L_UPPER+1)
 
-NR_RUNS = 5
+NR_RUNS = 50
 
 # Store values in array
 average_path_lengths = []
@@ -86,11 +86,13 @@ plt.fill_between(C_L_RANGE, np.subtract(average_path_lengths, std_dev_path_lengt
 
 # Adding labels and title
 plt.suptitle('Effect of leader connectivity on average longest path length of graph')
-plt.title(f'N={node_count}, {NR_RUNS} runs/$C_l$, $C_l$_MAX={C_L_UPPER}')
+plt.title(f'N={node_count}, {NR_RUNS} runs/$C_l$, $S_l$={S_LEADER}, $\\hat{{S}}$={S_MEAN}')
 
 plt.xlabel('$C_l$')
 plt.ylabel('Average Longest Path Length')
 
+plt.savefig("Cl_vs_pathlength.png", dpi=300, bbox_inches='tight')
+plt.savefig()
 plt.show()
 
 
