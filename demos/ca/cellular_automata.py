@@ -76,7 +76,7 @@ class CA(object):
         self.N = self.__gen_number_of_nonempty_nodes_in_grid()
 
         # Utility variables for optimization
-        self.__node_coords = self.__gen_array_node_coord_tuples()
+        self.node_coords = self.__gen_array_node_coord_tuples()
         self.__leader_node_coord_idx = self.__gen_leader_coord_index()
         self.distance_matrix = self.__gen_distance_matrix()
         self.beta_matrix = self.__gen_beta_matrix(beta, beta_leader)
@@ -88,7 +88,7 @@ class CA(object):
     def __gen_initial_opinion_grid(self):
         assert self.gridsize_x % 2 == 1 and self.gridsize_y % 2 == 1, 'Gridsize must be odd for central leader placement'
 
-        grid = np.zeros((self.gridsize_x, self.gridsize_y))
+        grid = np.zeros((self.gridsize_x, self.gridsize_y), dtype=int)
 
         center_x = int((self.gridsize_x-1)/2)
         center_y = int((self.gridsize_y-1)/2)
@@ -134,7 +134,7 @@ class CA(object):
         N = self.N
 
         for n in range(N):
-            if self.__node_coords[n, 0] == center_x and self.__node_coords[n, 1] == center_y:
+            if self.node_coords[n, 0] == center_x and self.node_coords[n, 1] == center_y:
                 return n
 
         raise ValueError('Leader not found!')
@@ -149,7 +149,7 @@ class CA(object):
         # It is a 3D matrix of size GRIDSIZE_X,GRIDSIZE_,N
         # Each submatrix is the distance grid from each node
         # TODO (Secondary): Optimize this knowing the distance matrix is symetric
-        node_coords = self.__node_coords
+        node_coords = self.node_coords
         N = node_coords.shape[0]
         distance_matrix = np.zeros((N, N))
 
@@ -213,7 +213,7 @@ class CA(object):
             # print('nodes',nodes[0])
 
             for n in nodes:
-                nx, ny = self.__node_coords[n, 0], self.__node_coords[n, 1]
+                nx, ny = self.node_coords[n, 0], self.node_coords[n, 1]
                 if int(self.opinion_grid[int(nx), int(ny)]) != int(leader_opinion):
                     # If somebody has different opinion than leader, then we dont have cluster
                     # print('NOOO')
@@ -238,8 +238,8 @@ class CA(object):
             # First compute impact
             # Retrieve node opinion from grid
             # and node influence from matrix
-            i_x, i_y = int(self.__node_coords[i, 0]), int(
-                self.__node_coords[i, 1])
+            i_x, i_y = int(self.node_coords[i, 0]), int(
+                self.node_coords[i, 1])
 
             sigma_i = grid[i_x, i_y]
             s_i = self.__node_influences[i]
@@ -250,8 +250,8 @@ class CA(object):
                 if j != i:
                     # Retrieve their opinion and influence and distance
                     # And add the term
-                    j_x, j_y = int(self.__node_coords[j, 0]), int(
-                        self.__node_coords[j, 1])
+                    j_x, j_y = int(self.node_coords[j, 0]), int(
+                        self.node_coords[j, 1])
 
                     sigma_j = grid[j_x, j_y]
                     s_j = self.__node_influences[j]
@@ -347,7 +347,7 @@ class CA(object):
             plt.savefig(
                 f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_t={t}.png', dpi=300)
 
-    def plot_opinion_grid_evolution(self, data, viz_range=None, interval=250, save=False):
+    def plot_opinion_grid_evolution(self, data, viz_range=None, interval=250, save=False, filename=None):
         """
         Plot the evolution of the opinion grid from data returned by `evolve()`
         """
@@ -370,8 +370,8 @@ class CA(object):
             anim = FuncAnimation(plt.gcf(), update, frames=range(
                 *viz_range), interval=interval)
         if save:
-            anim.save(
-                f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_evolution.mp4', dpi=300)
+            filename = f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_evolution.mp4' if filename is None else f'figures/{filename}.mp4'
+            anim.save(f'{filename}', dpi=300)
 
 # do not know which a to use but use a1 first
 # Inside and outside impact
