@@ -27,4 +27,3 @@ network = Network(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=
 data = network.evolve(TIMESTEPS)
 network.plot_opinion_network_evolution(data, interval=250)
 plt.show()
-

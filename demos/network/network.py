@@ -446,4 +446,3 @@ class Network(object):
         if save:
             anim.save(
                 f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
-
