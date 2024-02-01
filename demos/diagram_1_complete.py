@@ -8,8 +8,31 @@ import matplotlib.pyplot as plt
 
 np.random.seed(42)
 
+
+NUMBER_OF_SL_VALUES_TO_TEST = 10
+SIMS_PER_SL_VALUE = 10
+NUMBER_OF_P1_VALUES_PER_SL = 3 # For the deterministic case
+TEMPERATURE_VALUES_PER_SL = 3
+TMAX = 100
+
+# TODO: Add points with different innit, so we converge to other stable state
+# TODO: Add sims with temperature so we can also get unstable states
+
 ################################
 
+GRIDSIZE_X,GRIDSIZE_Y = 45,45
+TIMESTEPS = 50
+TEMP = 0
+BETA = 1
+BETA_LEADER = 1
+H = 0
+P_OCCUPATION = 1
+P_OPINION_1 = 0
+a_0 = 1 # Size of innitial cluster around leader
+S_MEAN = 1
+
+################################
+"""
 NUMBER_OF_SL_VALUES_TO_TEST = 10
 SIMS_PER_SL_VALUE = 10
 
@@ -34,6 +57,7 @@ P_OCCUPATION = 1
 P_OPINION_1 = 0
 a_0 = 1 # Size of innitial cluster around leader
 S_MEAN = 1
+"""
 
 ################################
 
@@ -141,6 +165,7 @@ for index in range(NUMBER_OF_SL_VALUES_TO_TEST):
 # x,y coordinates of all of them
 points_x_stoc = np.zeros(NUMBER_OF_SL_VALUES_TO_TEST*TEMPERATURE_VALUES_PER_SL*SIMS_PER_SL_VALUE)
 points_y_stoc = np.zeros(NUMBER_OF_SL_VALUES_TO_TEST*TEMPERATURE_VALUES_PER_SL*SIMS_PER_SL_VALUE)
+points_t_stoc = np.zeros(NUMBER_OF_SL_VALUES_TO_TEST*TEMPERATURE_VALUES_PER_SL*SIMS_PER_SL_VALUE)
 
 
 # Do stoch sim points for all SL
@@ -152,18 +177,28 @@ for i in range(NUMBER_OF_SL_VALUES_TO_TEST):
     for j in range(TEMPERATURE_VALUES_PER_SL):
         TEMP = temperatures[j]
 
+        print('T',TEMP)
+
         # Many times per temperature
         for k in range(SIMS_PER_SL_VALUE):
             model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta_leader=BETA_LEADER, beta=BETA, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
             data = model.evolve(TIMESTEPS)
             #simulation = data['opinions']
             #cluster_sizes = data['cluster_sizes']
-            last_cluster_size = data['cluster_sizes'][-1]
+            #last_cluster_size = data['cluster_sizes'][-1]
+            last_cluster_size = np.mean(data['cluster_sizes'])
             
             # If not, save thereç
             index = i*NUMBER_OF_SL_VALUES_TO_TEST + j*TEMPERATURE_VALUES_PER_SL + k*SIMS_PER_SL_VALUE
             points_x_stoc[index] = S_LEADER
             points_y_stoc[index] = last_cluster_size
+            points_t_stoc[index] = TEMP
+
+
+np.savetxt('./figures/diagram1_points_slvalues.npy',points_x_stoc,delimiter=",")
+np.savetxt('./figures/diagram1_points_clustersize.npy',points_x_stoc,delimiter=",")
+np.savetxt('./figures/diagram1_points_temperatures.npy',points_x_stoc,delimiter=",")
+
 
 
 
@@ -243,6 +278,10 @@ ax.set_ylim(0,int(R)+1)
 plt.grid()
 plt.legend()
 plt.tight_layout()
+
+plt.savefig('./figures/diagram1_points_temperatures.png')
+
+
 plt.show(block=True)
 
 

@@ -17,11 +17,11 @@ import csv
 ################################
 
 NUMBER_OF_T_VALUES_TO_TEST = 20 # Should be 20
-SIMS_PER_T_VALUE = 30 # Should be 30 for final one!
-T_MAX = 60
+SIMS_PER_T_VALUE = 15 # Should be 30 for final one!
+T_MAX = 100
 
 
-S_LEADER = 100             # May need to tweak this to ensure we are on cluster region!
+S_LEADER = 400             # May need to tweak this to ensure we are on cluster region!
 ################################
 
 # Todo this we first get parameters that for T=0
@@ -29,7 +29,7 @@ S_LEADER = 100             # May need to tweak this to ensure we are on cluster 
 
 ################################
 
-GRIDSIZE_X,GRIDSIZE_Y = 21,21
+GRIDSIZE_X,GRIDSIZE_Y = 45,45
 TIMESTEPS = 20
 #TEMPERATURE = 0
 BETA = 1
@@ -102,7 +102,7 @@ with open('./figures/t_threshold_plot_params.csv', 'w') as f:  # You will need '
 # to start with we actually have a cluster to overcome
 TEMP = 0
 
-model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
+model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN, show_tqdm=True)
 data = model.evolve(TIMESTEPS)
 simulation = data['opinions']
 cluster_sizes = data['cluster_sizes']
@@ -157,7 +157,26 @@ for index in range(NUMBER_OF_T_VALUES_TO_TEST):
     last_cluster_sizes = np.zeros(SIMS_PER_T_VALUE)
 
     for sim in range(SIMS_PER_T_VALUE):
-        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN)
+
+        model = ca.CA(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN, show_tqdm=True)
+        
+        # Evolve each timestep
+        #for t in range(TIMESTEPS):
+        #    data = model.evolve(1)
+        #    last_cluster_size = data['cluster_sizes'][-1]
+        #    if last_cluster_size <= THRESHOLD:
+        #        break
+
+        # Save to make std dev
+        #last_cluster_sizes[sim] = last_cluster_size
+
+        # Check if unification was overcomed!
+        # That is, if the cluster around leader is gone
+        # Which will be under a threshold
+        #if last_cluster_size <= THRESHOLD:
+        #    leader_overcomed += 1
+
+
         data = model.evolve(TIMESTEPS)
         #simulation = data['opinions']
         #cluster_sizes = data['cluster_sizes']
