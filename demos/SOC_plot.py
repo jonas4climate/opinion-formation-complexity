@@ -148,8 +148,8 @@ fit.power_law.plot_pdf( color= 'b',linestyle='--',label='fit ccdf')
 ax = fit.plot_pdf( color= 'b')
 
 ax.set_title('PDF of CA at critical temperature')
-ax.set_xlabel('connected nodes')
-ax.set_ylabel('p(connected nodes')
+ax.set_xlabel('size of connected nodes')
+ax.set_ylabel('p(connected nodes)')
 
 
 
