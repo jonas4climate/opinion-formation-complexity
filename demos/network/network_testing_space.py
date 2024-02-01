@@ -16,11 +16,13 @@ P_OCCUPATION = 1
 P_OPINION_1 = 1
 
 #Grid
-S_LEADER = 300   # Leader influence
+S_LEADER = 1   # Leader influence
 S_MEAN = 1
 
 #Barabasi-Albert
-C_LEADER = 100
+CENTRALITY_MEASURE = 'connectivity'
+C_LEADER = 30
+
 
 NETWORK_TYPE = 'barabasi-albert'
 network = Network(gridsize_x=GRIDSIZE_X, gridsize_y=GRIDSIZE_Y, temp=TEMP, beta=BETA, beta_leader=BETA_LEADER, h=H, p_occupation=P_OCCUPATION, p_opinion_1=P_OPINION_1, s_leader=S_LEADER, s_mean=S_MEAN , network_type = NETWORK_TYPE, c_leader = C_LEADER)
