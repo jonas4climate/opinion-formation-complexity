@@ -92,5 +92,11 @@ title_string = f'Cl_{C_L_RANGE}_{NR_RUNS}_runs'
 plt.savefig(title_string, dpi=300, bbox_inches='tight')
 plt.show()
 
+# Save used parameters
+with open('./figures/BA_network_params.csv', 'w') as f:  # You will need 'wb' mode in Python 2.x
+    w = csv.DictWriter(f, params_used.keys())
+    w.writeheader()
+    w.writerow(params_used)
+
 
 
