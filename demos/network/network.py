@@ -4,16 +4,21 @@ import numpy as np
 from tqdm import tqdm
 import logging
 from logging import warning, error, info, debug
+import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation
 
 logging.basicConfig(level=logging.WARNING)
 
 def longest_opinion_path(G, leader_opinion, node_current, path_current, length_current, visited):
+    """
+    Recursively searches for the longest path with the leader opinion leader_opinion in graph G
+    """
+
     # Mark node you are at and move one step to the next node with the leader opinion
     visited.add(node_current)
     path_current.append(node_current)
 
-    #Find neighbors with consensus
+    # Find neighbors with consensus
     consensus_neighbors = [neighbor for neighbor in G.neighbors(node_current) if G.nodes[neighbor]['opinion'] == leader_opinion]
 
     # Recursively look at the neighbor with the leader opinion
@@ -26,6 +31,9 @@ def longest_opinion_path(G, leader_opinion, node_current, path_current, length_c
     return path_current, length_current
 
 def longest_path(G, leader_opinion):
+    """
+    Find the longest path of nodes in graph G that align with the opinion of the leader leader_opinion
+    """
     #Find the longest path of nodes with the same opinion of the leader
 
     longest_path = []
@@ -95,7 +103,9 @@ def leader_degree(leader_degree, avg_degree, c=2):
 
 class Network(object):
 
-    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader, s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1, s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1):
+    def __init__(self, gridsize_x, gridsize_y, p_occupation, p_opinion_1, temp, h, beta, beta_leader,
+                 s_mean, s_leader, dist_func='euclidean', dist_scaling_func='linear', dist_scaling_factor=1,
+                 s_prob_dist_func='uniform', network_type='grid', ba_m=4, neighbor_dist=1, c_leader = 1):
         # Parameters directly provided
         self.gridsize_x, self.gridsize_y = gridsize_x, gridsize_y
         self.p_occupation = p_occupation
@@ -140,8 +150,9 @@ class Network(object):
             for source in nodes:
                 for neighbor in nodes:
                     if source != neighbor:
-                        distance = sum(abs(source[i] - neighbor[i])
-                                    for i in range(2))
+                        # distance = sum(abs(source[i] - neighbor[i])
+                        #             for i in range(2))
+                        distance = grid_distance_metric(source, neighbor, 'euclidean')
                         G.add_edge(source, neighbor, distance=distance)
 
             # Remove nodes with probability (1-p)
@@ -309,7 +320,7 @@ class Network(object):
 
         nodes = list(self.G.nodes())
 
-        # Get and print all node attributes
+        # Get and note all node attributes
         node_attributes = self.G.nodes.data()
         for node, attributes in node_attributes:
             info(f"Node {node}, with attributes {attributes}")
@@ -420,14 +431,10 @@ class Network(object):
                 node_sizes = [100 if node == self.leader_node else 20 for node in self.G.nodes]
 
                 nx.draw_networkx_nodes(self.G, pos, node_color=opinion_history[t], node_size=node_sizes)
-
-                # #Subgraph for the longest path
-                # path_edges = [(path_history[t][i], path_history[t][i + 1]) for i in range(len(path_history[t]) - 1)]
-                # path_subgraph = self.G.edge_subgraph(path_edges)
                 #
-                #
-                # #Illustrate subgraph
-                # nx.draw(path_subgraph, pos,node_size = 0, edge_color='green', width=1)
+                # # Draw subgraph for the longest path
+                # path_subgraph = nx.complete_graph(path_history[t])
+                # nx.draw_networkx_edges(path_subgraph, pos, edge_color='black', width=0.5)
 
                 plt.annotate(f"Longest path length= {len(path_history[t])}", xy=(0.5, 0.0),xycoords='axes fraction', ha='center', va='center')
 
@@ -444,5 +451,6 @@ class Network(object):
         anim = FuncAnimation(plt.gcf(), update, frames=range(0, opinion_history.shape[0]), interval=interval)
 
         if save:
-            anim.save(
-                f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.mp4', dpi=300)
+            writergif = animation.PillowWriter(fps=30)
+            anim.save( f'{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.gif', dpi=300, writer=writergif )
+

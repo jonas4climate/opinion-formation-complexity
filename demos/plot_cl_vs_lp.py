@@ -7,18 +7,15 @@ import matplotlib.pyplot as plt
 Runs the network for a specified number of runs with varying c_L parameters
 """
 
-
-
 #Use same seed for initialization
 np.random.seed(0)
-
 
 #Set parameters
 ################################
 
 GRIDSIZE_X,GRIDSIZE_Y = 21,21
 TIMESTEPS = 20
-TEMP = 10
+TEMP = 0
 H = 0
 BETA = 1
 BETA_LEADER = 1
@@ -48,7 +45,7 @@ parameters = {
     'S_MEAN': S_MEAN,
 }
 
-#Define C_L range
+#Define C_L range, number of runs
 
 C_L_LOWER = 1
 C_L_UPPER = 100
@@ -91,8 +88,8 @@ plt.title(f'N={node_count}, {NR_RUNS} runs/$C_l$, $S_l$={S_LEADER}, $\\hat{{S}}$
 plt.xlabel('$C_l$')
 plt.ylabel('Average Longest Path Length')
 
-plt.savefig("Cl_vs_pathlength.png", dpi=300, bbox_inches='tight')
-plt.savefig()
+title_string = f'Cl_{C_L_RANGE}_{NR_RUNS}_runs'
+plt.savefig(title_string, dpi=300, bbox_inches='tight')
 plt.show()
 
 

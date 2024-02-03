@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from multiprocessing import Pool
 from tqdm import tqdm
+import matplotlib.animation as animation
 import logging
 from logging import warning, error, info, debug
 
@@ -356,7 +357,7 @@ class CA(object):
 
         def update(t):
             plt.clf()
-            plt.imshow(opinion_history[t], vmin=-1, vmax=1)
+            plt.imshow(opinion_history[t]*-1, vmin=-1, vmax=1)
             plt.axis(False)
             plt.grid(False)
             plt.title(
@@ -369,9 +370,12 @@ class CA(object):
         else:
             anim = FuncAnimation(plt.gcf(), update, frames=range(
                 *viz_range), interval=interval)
+
         if save:
-            filename = f'figures/{self.gridsize_x}x{self.gridsize_y}_opinion_grid_evolution.mp4' if filename is None else f'figures/{filename}.mp4'
-            anim.save(f'{filename}', dpi=300)
+            writergif = animation.PillowWriter(fps=30)
+            anim.save( f'{self.gridsize_x}x{self.gridsize_y}_opinion_network_evolution.gif', dpi=300, writer=writergif )
+
+
 
 # do not know which a to use but use a1 first
 # Inside and outside impact
