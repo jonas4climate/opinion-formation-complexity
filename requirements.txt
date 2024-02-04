@@ -8,3 +8,5 @@ cellpylib
 tqdm
 numba
 powerlaw
+csv
+pylab
