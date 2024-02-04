@@ -322,8 +322,6 @@ class Network(object):
 
         # Get and note all node attributes
         node_attributes = self.G.nodes.data()
-        for node, attributes in node_attributes:
-            info(f"Node {node}, with attributes {attributes}")
 
         # Copy original network
         G_prev_step = self.G.copy()
