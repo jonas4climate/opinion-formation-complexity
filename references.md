@@ -6,7 +6,7 @@
 - [The psychology of social impact (1981)](https://psycnet.apa.org/doi/10.1037/0003-066X.36.4.343)
     - The core social impact model paper underpinning interactions between individuals
 
-## Interesting reads, consider in the future
+## Interesting literature for future lines of work
 - [Opinion formation on dynamic networks: identifying conditions for the emergence of partisan echo chambers (2018)](https://royalsocietypublishing.org/doi/full/10.1098/rsos.181122)
     - Opinion segregation of politicians on a network with agents
 - [Exact controllability of complex networks (2013)](https://www.nature.com/articles/ncomms3447)
