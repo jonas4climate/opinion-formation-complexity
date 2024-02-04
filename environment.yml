@@ -13,5 +13,6 @@ dependencies:
   - numba
   - tqdm
   - pip
+  - powerlaw
   - pip:
     - cellpylib

@@ -7,3 +7,4 @@ seaborn
 cellpylib
 tqdm
 numba
+powerlaw
