@@ -7,7 +7,7 @@ TODO: Speed up the simulation (if can)
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import ca.cellular_automata as ca
+import cellular_automata as ca
 from multiprocessing import Pool
 from tqdm import tqdm
 import csv

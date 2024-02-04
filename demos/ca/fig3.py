@@ -7,11 +7,9 @@ Added a new function for calculate the mean cluster radius
 
 Caution: Just focus on the gird of final timestep 
 
-TODO: Still need to be tested for the optimum parameter
-TODO: Speed up the simulation (if can)
 """
 import numpy as np
-import ca.cellular_automata as ca
+import cellular_automata as ca
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 from tqdm import tqdm
