@@ -29,10 +29,9 @@ P_OPINION_1 = 0
 S_LEADER = 400   
 S_MEAN = 1
 
-T_MAX = 100
-STEPSIZE = 5
 
-TEMPERATURES= np.arange(0, T_MAX+STEPSIZE, STEPSIZE)
+TEMPERATURES= np.array(list(range(0, 40, 5))+list(range(40, 60, 2))+list(range(60, 100, 5))+list(range(100, 325, 25)), dtype=int)
+
 N_SIMS = 15    # Run times
 mean_cluster_radii = []
 std_cluster_radii = []
@@ -76,7 +75,7 @@ if __name__ == '__main__':
         'P Opinion 1': P_OPINION_1,
         'S Leader': S_LEADER,
         'S Mean': S_MEAN,
-        'T Max': T_MAX,
+        #'T Max': T_MAX,
         'N Simulations': N_SIMS
     })
 
