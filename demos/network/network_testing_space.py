@@ -2,6 +2,7 @@ from network import Network
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
+import csv
 
 np.random.seed(0)
 ################################
