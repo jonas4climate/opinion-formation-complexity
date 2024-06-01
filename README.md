@@ -16,25 +16,9 @@ The research and major results have been summarized in the [presentation file](C
 
 Many visualizations and results can be found in the [figures folder](./figures/), such as:
 
-<table>
-  <tr>
-    <td>
-      <img src="./figures/ca_oscillations.gif" height="300">
-      <br>
-      <em>Oscillations of leader influence (center node) in stochastic cellular automata</em>
-    </td>
-    <td>
-      <img src="./figures/SOC.gif" height="300"/>
-      <br>
-      <em>Self-organized criticality on stochastic cellular automata</em>
-    </td>
-    <td>
-      <img src="./figures/unification_network.gif" height="300"/>
-      <br>
-      <em>Unification near critical temperature on network (visualized on lattice)</em>
-    </td>
-  </tr>
-</table>
+| ![Oscillations of leader influence (center node) in stochastic cellular automata](./figures/ca_oscillations.gif) | ![Self-organized criticality on stochastic cellular automata](./figures/SOC.gif) | ![Unification near critical temperature on network (visualized on lattice)](./figures/unification_network.gif) |
+|:---:|:---:|:---:|
+| Oscillations of leader influence (center node) in stochastic cellular automata | Self-organized criticality on stochastic cellular automata | Unification near critical temperature on network (visualized on lattice) |
 
 ### References
 
