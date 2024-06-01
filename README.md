@@ -12,7 +12,7 @@ _Alternative_: Using **pip** only, start by creating a virtual environment `pyth
 
 ### Results
 
-The research and major results have been summarized in the [presentation file](Complex%20System%20Presentation.pdf).
+The research and major results have been summarized and can be viewed in the [presentation file](Complex%20System%20Presentation.pdf) which you can [download here](https://raw.githubusercontent.com/jonas4climate/opinion-formation-complexity/main/Complex%20System%20Presentation.pdf).
 
 Many visualizations and results can be found in the [figures folder](./figures/), such as:
 
